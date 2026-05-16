@@ -3,7 +3,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 import datetime
-from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from src.domain.exceptions import DomainException
