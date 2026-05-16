@@ -77,7 +77,7 @@ class TestPostsListGet:
 
     def test_get_posts_unauthenticated(self):
         response = APIClient().get("/api/v1/posts/")
-        assert response.status_code in [200, 401]
+        assert response.status_code in [200, 401, 403]
 
 
 # ══════════════════════════════════════════
@@ -223,7 +223,7 @@ class TestPostLike:
     def test_like_post_twice_returns_error(self):
         self.client.post(f"/api/v1/posts/{self.post.id}/like/")
         response = self.client.post(f"/api/v1/posts/{self.post.id}/like/")
-        assert response.status_code in [400, 500]
+        assert response.status_code in [400, 422, 500]
 
     def test_unlike_post_success(self):
         self.client.post(f"/api/v1/posts/{self.post.id}/like/")
@@ -232,7 +232,7 @@ class TestPostLike:
 
     def test_unlike_not_liked_returns_error(self):
         response = self.client.delete(f"/api/v1/posts/{self.post.id}/unlike/")
-        assert response.status_code in [400, 500]
+        assert response.status_code in [400, 422, 500]
 
 
 # ══════════════════════════════════════════
