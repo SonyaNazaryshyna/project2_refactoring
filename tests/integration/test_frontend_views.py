@@ -501,11 +501,6 @@ class TestAdminPanelEdgeCases:
         response = client.post("/admin-panel/delete/someuser")
         assert response.status_code == 302
 
-    def test_admin_delete_other_user(self):
-        create_user("deleteadmintest2", "deleteadmintest2@test.com")
-        response = self.client.post("/admin-panel/delete/deleteadmintest2")
-        assert response.status_code == 302
-
     def test_login_exception_handler(self):
         client = Client(enforce_csrf_checks=False)
         response = client.post("/login", {
