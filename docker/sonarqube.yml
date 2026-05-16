@@ -1,9 +1,3 @@
-# Запуск SonarQube окремо:
-#   docker compose -f docker/sonarqube.yml up -d
-# Відкрий: http://localhost:9000
-# Логін: admin / admin (змінити при першому вході)
-# Потім створи проєкт "whispr-microblog" і скопіюй токен у .env як SONAR_TOKEN
-
 services:
   sonarqube:
     image: sonarqube:10-community

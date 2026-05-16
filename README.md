@@ -1,6 +1,6 @@
 # 📝 Microblog Service
 
-![SonarQube Analysis](https://img.shields.io/github/actions/workflow/status/your-org/microblog/ci.yml?label=CI&logo=github)
+![CI — Whispr](https://img.shields.io/github/actions/workflow/status/your-org/microblog/ci.yml?label=CI&logo=github)
 ![Coverage](https://img.shields.io/badge/coverage-87%25-brightgreen)
 ![Python](https://img.shields.io/badge/python-3.12-blue?logo=python)
 ![Django](https://img.shields.io/badge/django-5.0-green?logo=django)
