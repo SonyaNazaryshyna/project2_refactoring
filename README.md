@@ -3,6 +3,10 @@
 ![CI — Whispr](https://github.com/SonyaNazaryshyna/project2_refactoring/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.12-blue?logo=python)
 ![Django](https://img.shields.io/badge/django-5.0-green?logo=django)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=SonyaNazaryshyna_project2_refactoring&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=SonyaNazaryshyna_project2_refactoring)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=SonyaNazaryshyna_project2_refactoring&metric=coverage)](https://sonarcloud.io/summary/new_code?id=SonyaNazaryshyna_project2_refactoring)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=SonyaNazaryshyna_project2_refactoring&metric=bugs)](https://sonarcloud.io/summary/new_code?id=SonyaNazaryshyna_project2_refactoring)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=SonyaNazaryshyna_project2_refactoring&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=SonyaNazaryshyna_project2_refactoring)
 
 ---
 
