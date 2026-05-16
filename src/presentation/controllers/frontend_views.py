@@ -286,33 +286,45 @@ def user_profile_view(request, username):
     )
 
 
+def _apply_profile_updates(user_orm, request, username):
+    """Apply profile field updates. Returns error redirect URL or None."""
+    new_username = request.POST.get("username", "").strip()
+    bio = request.POST.get("bio", "").strip()
+    avatar_file = request.FILES.get("avatar")
+
+    if new_username and new_username != user_orm.username:
+        if UserORM.objects.filter(username=new_username).exists():
+            return f"/user/{username}?error=username_taken"
+        user_orm.username = new_username
+
+    if bio is not None:
+        user_orm.bio = bio
+
+    if avatar_file:
+        content = avatar_file.read()
+        mime = avatar_file.content_type or "image/jpeg"
+        b64 = base64.b64encode(content).decode()
+        user_orm.avatar_url = f"data:{mime};base64,{b64}"
+
+    return None
+
+
 @csrf_protect
 def update_profile_view(request, username):
     current_user = _me(request)
     if not current_user or current_user["username"] != username:
         return redirect(LOGIN)
-    if request.method == "POST":
-        try:
-            user_orm = UserORM.objects.get(id=current_user["id"])
-            new_username = request.POST.get("username", "").strip()
-            bio = request.POST.get("bio", "").strip()
-            avatar_file = request.FILES.get("avatar")
-            if new_username and new_username != user_orm.username:
-                if UserORM.objects.filter(username=new_username).exists():
-                    return redirect(f"/user/{username}?error=username_taken")
-                user_orm.username = new_username
-            if bio is not None:
-                user_orm.bio = bio
-            if avatar_file:
-                content = avatar_file.read()
-                mime = avatar_file.content_type or "image/jpeg"
-                b64 = base64.b64encode(content).decode()
-                user_orm.avatar_url = f"data:{mime};base64,{b64}"
-            user_orm.save()
-            return redirect(f"/user/{user_orm.username}")
-        except Exception:
-            return redirect(f"/user/{username}")
-    return redirect(f"/user/{username}")
+    if request.method != "POST":
+        return redirect(f"/user/{username}")
+    try:
+        user_orm = UserORM.objects.get(id=current_user["id"])
+        error_url = _apply_profile_updates(user_orm, request, username)
+        if error_url:
+            return redirect(error_url)
+        user_orm.save()
+        return redirect(f"/user/{user_orm.username}")
+    except Exception:
+        return redirect(f"/user/{username}")
 
 def followers_view(request, username):
     user = _me(request)
