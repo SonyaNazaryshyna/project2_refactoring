@@ -1,7 +1,6 @@
 # 📝 Microblog Service
 
 ![CI — Whispr](https://github.com/SonyaNazaryshyna/project2_refactoring/actions/workflows/ci.yml/badge.svg)
-![Coverage](https://img.shields.io/badge/coverage-87%25-brightgreen)
 ![Python](https://img.shields.io/badge/python-3.12-blue?logo=python)
 ![Django](https://img.shields.io/badge/django-5.0-green?logo=django)
 
