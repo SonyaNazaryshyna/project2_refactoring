@@ -22,6 +22,7 @@ from src.application.dtos import RegisterRequest, LoginRequest
 from src.infrastructure.external.notification import CeleryNotificationSender
 from django.conf import settings
 
+ADMIN_PANEL_URL = "/admin-panel"
 
 def _get_jwt():
     cfg = JWTConfig(
@@ -422,7 +423,7 @@ def admin_ban_view(request, username):
     if not user or not user.get("is_admin"):
         return redirect("/")
     UserORM.objects.filter(username=username).update(is_active=False)
-    return redirect("/admin-panel")
+    return redirect(ADMIN_PANEL_URL)
 
 
 @require_http_methods(["POST"])
@@ -432,7 +433,7 @@ def admin_unban_view(request, username):
     if not user or not user.get("is_admin"):
         return redirect("/")
     UserORM.objects.filter(username=username).update(is_active=True)
-    return redirect("/admin-panel")
+    return redirect(ADMIN_PANEL_URL)
 
 
 @require_http_methods(["POST"])
@@ -443,4 +444,4 @@ def admin_delete_view(request, username):
         return redirect("/")
     if username != user["username"]:
         UserORM.objects.filter(username=username).delete()
-    return redirect("/admin-panel")
+    return redirect(ADMIN_PANEL_URL)
