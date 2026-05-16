@@ -1,4 +1,5 @@
 """Dependency injection container — wires all layers together."""
+
 from __future__ import annotations
 from functools import lru_cache
 from django.conf import settings

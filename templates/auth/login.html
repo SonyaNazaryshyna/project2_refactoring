@@ -1,19 +1,20 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="uk" data-theme="dark">
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Увійти — Мікроблог</title>
+  <title>Увійти — Whispr</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/static/css/base.css"/>
   <link rel="stylesheet" href="/static/css/auth.css"/>
+  <script>(function(){const t=localStorage.getItem('whispr-theme')||'dark';document.documentElement.setAttribute('data-theme',t)})();</script>
 </head>
 <body class="auth-page">
 <div class="auth-bg"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
 <div class="auth-wrap">
   <div class="auth-brand">
-    <div class="brand-lg">М</div>
-    <h1>мікроблог</h1>
+    <div class="brand-lg">W</div>
+    <h1>Whispr</h1>
     <p>Думки без меж — 280 символів</p>
   </div>
   <div class="auth-card">
@@ -21,7 +22,7 @@
       <a href="/login" class="tab active">Увійти</a>
       <a href="/register" class="tab">Реєстрація</a>
     </div>
-    {% if error %}<div class="form-error" style="margin-bottom:16px">{{ error }}</div>{% endif %}
+    {% if error %}<div class="form-error" style="margin-bottom:14px">{{ error }}</div>{% endif %}
     <form method="POST" action="/login" class="auth-form">
       {% csrf_token %}
       <div class="field"><label>Email</label><input type="email" name="email" placeholder="you@example.com" required/></div>

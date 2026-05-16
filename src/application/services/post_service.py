@@ -1,8 +1,14 @@
 """PostService — orchestrates post use cases."""
+
 from __future__ import annotations
 from uuid import UUID
 
-from src.application.dtos import CreatePostRequest, EditPostRequest, PostResponse, PaginatedResponse
+from src.application.dtos import (
+    CreatePostRequest,
+    EditPostRequest,
+    PostResponse,
+    PaginatedResponse,
+)
 from src.domain.entities.post import Post
 from src.domain.exceptions import DomainException
 from src.domain.ports import PostRepository, LikeRepository, UserRepository

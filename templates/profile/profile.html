@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}@{{ profile_user.username }} — Мікроблог{% endblock %}
+{% block title %}@{{ profile_user.username }} — Whispr{% endblock %}
 {% block nav_profile %}{% if is_own %}active{% endif %}{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="/static/css/profile.css"/>{% endblock %}
 
@@ -7,119 +7,112 @@
 <div class="panel-card">
   <h3>Статистика</h3>
   <div class="panel-stats">
-    <div class="p-stat">
-      <span class="p-num">{{ profile_user.follower_count }}</span>
-      <span class="p-label">підписників</span>
-    </div>
-    <div class="p-stat">
-      <span class="p-num">{{ profile_user.following_count }}</span>
-      <span class="p-label">підписок</span>
-    </div>
-    <div class="p-stat">
-      <span class="p-num">{{ posts|length }}</span>
-      <span class="p-label">дописів</span>
-    </div>
+    <div class="p-stat"><span class="p-num">{{ profile_user.follower_count }}</span><span class="p-label">підписників</span></div>
+    <div class="p-stat"><span class="p-num">{{ profile_user.following_count }}</span><span class="p-label">підписок</span></div>
+    <div class="p-stat"><span class="p-num">{{ posts|length }}</span><span class="p-label">дописів</span></div>
   </div>
 </div>
 {% endblock %}
 
 {% block content %}
-
-<!-- PROFILE HEADER -->
 <div class="prof-header">
   <div class="prof-top">
-    <div class="prof-avatar">{{ profile_user.username|first|upper }}</div>
+    {% if profile_user.avatar_url %}
+      <img src="{{ profile_user.avatar_url }}" class="prof-avatar s-img" alt="avatar"/>
+    {% else %}
+      <div class="prof-avatar">{{ profile_user.username|first|upper }}</div>
+    {% endif %}
     <div>
       {% if is_own %}
-        <button class="btn-outline"
-                onclick="document.getElementById('edit-modal').classList.remove('hidden')">
-          Редагувати
-        </button>
+        <button class="btn-outline" onclick="document.getElementById('edit-modal').classList.remove('hidden')">✏️ Редагувати</button>
       {% else %}
-        <button id="follow-btn"
-                class="follow-btn {% if is_following %}is-following{% endif %}"
-                data-username="{{ profile_user.username }}"
-                data-following="{{ is_following|yesno:'true,false' }}">
+        <button id="follow-btn" class="follow-btn {% if is_following %}is-following{% endif %}"
+                data-username="{{ profile_user.username }}" data-following="{{ is_following|yesno:'true,false' }}">
           {% if is_following %}Відписатись{% else %}+ Підписатись{% endif %}
         </button>
       {% endif %}
     </div>
   </div>
-
   <h1 class="prof-name">{{ profile_user.username }}</h1>
   <div class="prof-email">{{ profile_user.email }}</div>
-  {% if profile_user.bio %}
-    <p class="prof-bio">{{ profile_user.bio }}</p>
-  {% endif %}
+  {% if profile_user.bio %}<p class="prof-bio">{{ profile_user.bio }}</p>{% endif %}
   <div class="prof-stats-row">
-    <a href="/user/{{ profile_user.username }}/followers" class="prof-stat">
-      <strong>{{ profile_user.follower_count }}</strong> підписників
-    </a>
-    <a href="/user/{{ profile_user.username }}/following" class="prof-stat">
-      <strong>{{ profile_user.following_count }}</strong> підписок
-    </a>
+    <a href="/user/{{ profile_user.username }}/followers" class="prof-stat"><strong>{{ profile_user.follower_count }}</strong> підписників</a>
+    <a href="/user/{{ profile_user.username }}/following" class="prof-stat"><strong>{{ profile_user.following_count }}</strong> підписок</a>
   </div>
 </div>
 
-<!-- TABS -->
 <div class="prof-tabs">
   <button class="prof-tab active">Дописи ({{ posts|length }})</button>
 </div>
 
-<!-- POSTS -->
 <div class="posts-list">
   {% if posts %}
-    {% for post in posts %}
-      {% include "partials/post_card.html" %}
-    {% endfor %}
+    {% for post in posts %}{% include "partials/post_card.html" %}{% endfor %}
   {% else %}
-    <div class="empty-state">
-      <div class="empty-icon">📝</div>
-      <h3>Ще немає дописів</h3>
-      {% if is_own %}
-        <p>Напиши свій перший допис!</p>
-        <button class="btn-gold" onclick="openCompose()"
-                style="width:auto;padding:10px 24px;margin-top:8px">
-          Написати
-        </button>
-      {% endif %}
-    </div>
+  <div class="empty-state">
+    <div class="empty-icon">📝</div>
+    <h3>Ще немає дописів</h3>
+    {% if is_own %}<button class="btn-gold" style="width:auto;padding:10px 24px;margin-top:8px" onclick="openCompose()">Написати перший</button>{% endif %}
+  </div>
   {% endif %}
 </div>
 
-<!-- EDIT MODAL (only for own profile) -->
 {% if is_own %}
 <div id="edit-modal" class="modal-overlay hidden">
-  <div class="modal">
+  <div class="modal" style="max-width:560px">
     <div class="modal-head">
       <h3>Редагувати профіль</h3>
-      <button class="modal-x"
-              onclick="document.getElementById('edit-modal').classList.add('hidden')">✕</button>
+      <button class="modal-x" onclick="document.getElementById('edit-modal').classList.add('hidden')">✕</button>
     </div>
     <div class="modal-body">
-      <div class="field">
-        <label>Про себе</label>
-        <textarea id="edit-bio" rows="3" maxlength="500"
-                  placeholder="Розкажи про себе…">{{ profile_user.bio }}</textarea>
-      </div>
-      <div class="field" style="margin-top:14px">
-        <label>Аватар (URL)</label>
-        <input type="url" id="edit-avatar"
-               value="{{ profile_user.avatar_url|default:'' }}"
-               placeholder="https://..."/>
-      </div>
-      <div id="edit-error" class="form-error hidden" style="margin-top:10px"></div>
-      <button class="btn-gold" style="margin-top:18px" onclick="saveProfile()">
-        Зберегти
-      </button>
+      <form method="POST" action="/user/{{ profile_user.username }}/edit" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="avatar-upload-wrap">
+          <div class="avatar-preview" id="av-preview">
+            {% if profile_user.avatar_url %}
+              <img src="{{ profile_user.avatar_url }}" id="av-img" alt=""/>
+            {% else %}
+              <span id="av-letter">{{ profile_user.username|first|upper }}</span>
+            {% endif %}
+          </div>
+          <div>
+            <label class="btn-outline upload-label" for="avatar-input">
+              📷 Завантажити фото
+            </label>
+            <input type="file" id="avatar-input" name="avatar" accept="image/*" style="display:none" onchange="previewAvatar(this)"/>
+            <div style="font-size:.75rem;color:var(--muted);margin-top:6px">JPG, PNG до 5MB</div>
+          </div>
+        </div>
+        <div class="field" style="margin-top:18px">
+          <label>Ім'я користувача</label>
+          <input type="text" name="username" value="{{ profile_user.username }}" maxlength="30" required/>
+        </div>
+        <div class="field" style="margin-top:14px">
+          <label>Про себе</label>
+          <textarea name="bio" rows="3" maxlength="500" placeholder="Розкажи про себе…">{{ profile_user.bio }}</textarea>
+        </div>
+        <button type="submit" class="btn-gold" style="margin-top:18px">Зберегти</button>
+      </form>
     </div>
   </div>
 </div>
 {% endif %}
-
 {% endblock %}
 
 {% block extra_js %}
 <script src="/static/js/posts.js"></script>
 <script src="/static/js/profile.js"></script>
+<script>
+function previewAvatar(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const preview = document.getElementById('av-preview');
+      preview.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+</script>
 {% endblock %}

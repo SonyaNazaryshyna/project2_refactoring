@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Адмін — Whispr{% endblock %}
+{% block nav_admin %}active{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="/static/css/admin.css"/>{% endblock %}
+{% block content %}
+<div class="page-header"><h2>⚙️ Адмін панель</h2></div>
+<div class="admin-stats">
+  <div class="asc"><div class="asc-i">👥</div><div class="asc-n">{{ stats.total_users }}</div><div class="asc-l">Користувачів</div></div>
+  <div class="asc"><div class="asc-i">📝</div><div class="asc-n">{{ stats.total_posts }}</div><div class="asc-l">Дописів</div></div>
+  <div class="asc"><div class="asc-i">❤️</div><div class="asc-n">{{ stats.total_likes }}</div><div class="asc-l">Лайків</div></div>
+  <div class="asc"><div class="asc-i">🔗</div><div class="asc-n">{{ stats.total_follows }}</div><div class="asc-l">Підписок</div></div>
+</div>
+<div class="admin-section">
+  <div class="admin-sh">
+    <h3>Користувачі</h3>
+    <form method="GET" action="/admin-panel" class="admin-sf">
+      <input type="text" name="q" value="{{ query }}" placeholder="Пошук…"/>
+      <button type="submit" class="btn-gold btn-sm">Знайти</button>
+    </form>
+  </div>
+  <div class="admin-tw">
+    <table class="admin-t">
+      <thead><tr><th>Користувач</th><th>Email</th><th>Дописів</th><th>Статус</th><th>Дії</th></tr></thead>
+      <tbody>
+        {% for u in users %}
+        <tr class="{% if not u.is_active %}row-off{% endif %}">
+          <td><a href="/user/{{ u.username }}" class="au-link"><div class="au-av">{{ u.username|first|upper }}</div><div><div class="au-name">@{{ u.username }}</div><div class="au-date">{{ u.created_at }}</div></div></a></td>
+          <td class="au-email">{{ u.email }}</td>
+          <td style="text-align:center;font-weight:600">{{ u.post_count }}</td>
+          <td>{% if u.is_active %}<span class="badge-on">✅ Активний</span>{% else %}<span class="badge-off">🚫 Бан</span>{% endif %}</td>
+          <td class="au-acts">
+            {% if u.username != current_user.username %}
+              {% if u.is_active %}
+                <form method="POST" action="/admin-panel/ban/{{ u.username }}" style="display:inline">{% csrf_token %}<button type="submit" class="adm-btn ban">🚫 Бан</button></form>
+              {% else %}
+                <form method="POST" action="/admin-panel/unban/{{ u.username }}" style="display:inline">{% csrf_token %}<button type="submit" class="adm-btn unban">✅ Розбан</button></form>
+              {% endif %}
+              <form method="POST" action="/admin-panel/delete/{{ u.username }}" style="display:inline" onsubmit="return confirm('Видалити @{{ u.username }}?')">{% csrf_token %}<button type="submit" class="adm-btn del">🗑</button></form>
+            {% else %}<span style="color:var(--muted);font-size:.78rem">це ви</span>{% endif %}
+          </td>
+        </tr>
+        {% empty %}<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--muted)">Нікого не знайдено</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="admin-section">
+  <div class="admin-sh"><h3>Останні дописи</h3></div>
+  <div class="posts-list">{% for post in recent_posts %}{% include "partials/post_card.html" %}{% endfor %}</div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="/static/js/posts.js"></script>{% endblock %}

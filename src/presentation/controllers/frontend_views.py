@@ -1,20 +1,37 @@
-"""Frontend views — server-side rendered with Django templates."""
+"""Frontend views — server-side rendered Django templates."""
+
 from __future__ import annotations
-import requests
+import base64
 from django.shortcuts import render, redirect
+from django.views.decorators.csrf import csrf_exempt
 
-API = "http://127.0.0.1:8000/api/v1"
+from src.infrastructure.database.models import UserORM, PostORM, LikeORM, FollowORM
+from src.infrastructure.database.repositories import (
+    DjangoUserRepository,
+    DjangoPostRepository,
+    DjangoFollowRepository,
+    DjangoLikeRepository,
+)
+from src.infrastructure.security.jwt_provider import JWTProvider, JWTConfig
+from src.infrastructure.security.password import PasswordEncoder
+from src.application.services.auth_service import (
+    AuthService,
+    ConflictError,
+    AuthenticationError,
+)
+from src.application.dtos import RegisterRequest, LoginRequest
+from src.infrastructure.external.notification import CeleryNotificationSender
+from django.conf import settings
 
 
-def _api(path, token=None, method="GET", json=None):
-    headers = {"Content-Type": "application/json"}
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-    try:
-        r = requests.request(method, f"{API}{path}", headers=headers, json=json, timeout=5)
-        return r.json() if r.content else {}, r.status_code
-    except Exception:
-        return {}, 500
+def _get_jwt():
+    cfg = JWTConfig(
+        secret=settings.JWT_SECRET,
+        algorithm=settings.JWT_ALGORITHM,
+        access_ttl_seconds=int(settings.JWT_ACCESS_TTL.total_seconds()),
+        refresh_ttl_seconds=int(settings.JWT_REFRESH_TTL.total_seconds()),
+    )
+    return JWTProvider(cfg)
 
 
 def _token(request):
@@ -22,11 +39,54 @@ def _token(request):
 
 
 def _me(request):
+    """Get current user from cookie token directly via DB."""
     token = _token(request)
     if not token:
         return None
-    data, status = _api("/users/me", token=token)
-    return data if status == 200 else None
+    try:
+        import importlib
+
+        jwt = importlib.import_module("jwt")
+        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+        user = UserORM.objects.get(id=payload["sub"], is_active=True)
+        follower_count = FollowORM.objects.filter(following=user).count()
+        following_count = FollowORM.objects.filter(follower=user).count()
+        return {
+            "id": str(user.id),
+            "username": user.username,
+            "email": user.email,
+            "bio": user.bio,
+            "avatar_url": user.avatar_url,
+            "is_active": user.is_active,
+            "follower_count": follower_count,
+            "following_count": following_count,
+            "is_admin": user.role == "ROLE_ADMIN",
+        }
+    except Exception:
+        return None
+
+
+def _posts_to_list(qs, viewer_id):
+    """Convert PostORM queryset to list of dicts."""
+    like_repo = DjangoLikeRepository()
+    result = []
+    for p in qs:
+        result.append(
+            {
+                "id": str(p.id),
+                "author_id": str(p.author_id),
+                "author_username": p.author.username,
+                "content": p.content,
+                "status": p.status,
+                "like_count": p.like_count,
+                "is_liked_by_me": like_repo.has_liked(viewer_id, p.id),
+                "is_reply": p.parent_id is not None,
+                "parent_id": str(p.parent_id) if p.parent_id else None,
+                "created_at": p.created_at.strftime("%d.%m.%Y %H:%M"),
+                "updated_at": p.updated_at.isoformat(),
+            }
+        )
+    return result
 
 
 # ── Auth ───────────────────────────────────────────────────────────────────────
@@ -36,19 +96,32 @@ def login_view(request):
     if _token(request):
         return redirect("/")
     if request.method == "POST":
-        data, status = _api(
-            "/auth/login",
-            method="POST",
-            json={
-                "email": request.POST.get("email"),
-                "password": request.POST.get("password"),
-            },
-        )
-        if status == 200:
+        try:
+            svc = AuthService(
+                user_repo=DjangoUserRepository(),
+                password_encoder=PasswordEncoder(),
+                jwt_provider=_get_jwt(),
+                notification_sender=CeleryNotificationSender(),
+            )
+            tokens = svc.login(
+                LoginRequest(
+                    email=request.POST.get("email", ""),
+                    password=request.POST.get("password", ""),
+                )
+            )
             resp = redirect("/")
-            resp.set_cookie("access_token", data["access_token"], httponly=False, samesite="Lax", max_age=3600)
+            resp.set_cookie(
+                "access_token",
+                tokens.access_token,
+                httponly=False,
+                samesite="Lax",
+                max_age=3600,
+            )
             return resp
-        return render(request, "auth/login.html", {"error": data.get("message", "Невірний email або пароль")})
+        except AuthenticationError as e:
+            return render(request, "auth/login.html", {"error": str(e)})
+        except Exception:
+            return render(request, "auth/login.html", {"error": "Невірний email або пароль"})
     return render(request, "auth/login.html")
 
 
@@ -56,21 +129,34 @@ def register_view(request):
     if _token(request):
         return redirect("/")
     if request.method == "POST":
-        data, status = _api(
-            "/auth/register",
-            method="POST",
-            json={
-                "username": request.POST.get("username"),
-                "email": request.POST.get("email"),
-                "password": request.POST.get("password"),
-                "bio": request.POST.get("bio", ""),
-            },
-        )
-        if status == 201:
+        try:
+            svc = AuthService(
+                user_repo=DjangoUserRepository(),
+                password_encoder=PasswordEncoder(),
+                jwt_provider=_get_jwt(),
+                notification_sender=CeleryNotificationSender(),
+            )
+            tokens = svc.register(
+                RegisterRequest(
+                    username=request.POST.get("username", ""),
+                    email=request.POST.get("email", ""),
+                    password=request.POST.get("password", ""),
+                    bio=request.POST.get("bio", ""),
+                )
+            )
             resp = redirect("/")
-            resp.set_cookie("access_token", data["access_token"], httponly=False, samesite="Lax", max_age=3600)
+            resp.set_cookie(
+                "access_token",
+                tokens.access_token,
+                httponly=False,
+                samesite="Lax",
+                max_age=3600,
+            )
             return resp
-        return render(request, "auth/register.html", {"error": data.get("message", "Помилка реєстрації")})
+        except ConflictError as e:
+            return render(request, "auth/register.html", {"error": str(e)})
+        except Exception as e:
+            return render(request, "auth/register.html", {"error": str(e)})
     return render(request, "auth/register.html")
 
 
@@ -87,14 +173,21 @@ def feed_view(request):
     user = _me(request)
     if not user:
         return redirect("/login")
-    data, _ = _api("/feed?page=1&size=30", token=_token(request))
+    # Personal feed: posts from followed users
+    following_ids = FollowORM.objects.filter(follower_id=user["id"]).values_list("following_id", flat=True)
+    qs = (
+        PostORM.objects.filter(author_id__in=following_ids, status="PUBLISHED")
+        .select_related("author")
+        .order_by("-created_at")[:30]
+    )
+    posts = _posts_to_list(qs, user["id"])
     return render(
         request,
         "feed/feed.html",
         {
             "user_logged_in": True,
             "current_user": user,
-            "posts": data.get("items", []),
+            "posts": posts,
         },
     )
 
@@ -103,14 +196,49 @@ def explore_view(request):
     user = _me(request)
     if not user:
         return redirect("/login")
-    data, _ = _api("/posts?page=1&size=40", token=_token(request))
+    # ALL posts from everyone
+    qs = PostORM.objects.filter(status="PUBLISHED").select_related("author").order_by("-created_at")[:50]
+    posts = _posts_to_list(qs, user["id"])
     return render(
         request,
         "feed/explore.html",
         {
             "user_logged_in": True,
             "current_user": user,
-            "posts": data.get("items", []),
+            "posts": posts,
+        },
+    )
+
+
+# ── Search ─────────────────────────────────────────────────────────────────────
+
+
+def search_view(request):
+    user = _me(request)
+    if not user:
+        return redirect("/login")
+    query = request.GET.get("q", "").strip()
+    users = []
+    if query:
+        qs = UserORM.objects.filter(username__icontains=query, is_active=True).exclude(id=user["id"])[:20]
+        for u in qs:
+            users.append(
+                {
+                    "username": u.username,
+                    "email": u.email,
+                    "bio": u.bio,
+                    "avatar_url": u.avatar_url,
+                    "follower_count": FollowORM.objects.filter(following=u).count(),
+                }
+            )
+    return render(
+        request,
+        "feed/search.html",
+        {
+            "user_logged_in": True,
+            "current_user": user,
+            "query": query,
+            "users": users,
         },
     )
 
@@ -129,21 +257,28 @@ def user_profile_view(request, username):
     current_user = _me(request)
     if not current_user:
         return redirect("/login")
-    token = _token(request)
-
-    profile, status = _api(f"/users/{username}", token=token)
-    if status != 200:
+    try:
+        profile_orm = UserORM.objects.get(username=username)
+    except UserORM.DoesNotExist:
         return redirect("/")
 
-    # Get posts for this user
-    all_data, _ = _api("/posts?page=1&size=100", token=token)
-    posts = [p for p in all_data.get("items", []) if p.get("author_username") == username]
-
+    profile = {
+        "id": str(profile_orm.id),
+        "username": profile_orm.username,
+        "email": profile_orm.email,
+        "bio": profile_orm.bio,
+        "avatar_url": profile_orm.avatar_url,
+        "follower_count": FollowORM.objects.filter(following=profile_orm).count(),
+        "following_count": FollowORM.objects.filter(follower=profile_orm).count(),
+    }
+    qs = PostORM.objects.filter(author=profile_orm, status="PUBLISHED").select_related("author").order_by("-created_at")
+    posts = _posts_to_list(qs, current_user["id"])
     is_own = current_user["username"] == username
-    is_following = False
-    if not is_own:
-        flw, _ = _api(f"/users/{current_user['username']}/following?page=1&size=200", token=token)
-        is_following = any(u.get("username") == username for u in flw.get("items", []))
+    is_following = (
+        FollowORM.objects.filter(follower_id=current_user["id"], following=profile_orm).exists()
+        if not is_own
+        else False
+    )
 
     return render(
         request,
@@ -159,11 +294,56 @@ def user_profile_view(request, username):
     )
 
 
+def update_profile_view(request, username):
+    """Handle profile update including avatar image upload."""
+    current_user = _me(request)
+    if not current_user or current_user["username"] != username:
+        return redirect("/login")
+    if request.method == "POST":
+        try:
+            user_orm = UserORM.objects.get(id=current_user["id"])
+            new_username = request.POST.get("username", "").strip()
+            bio = request.POST.get("bio", "").strip()
+            avatar_file = request.FILES.get("avatar")
+
+            if new_username and new_username != user_orm.username:
+                if UserORM.objects.filter(username=new_username).exists():
+                    return redirect(f"/user/{username}?error=username_taken")
+                user_orm.username = new_username
+            if bio is not None:
+                user_orm.bio = bio
+            if avatar_file:
+                # Save as base64 data URL
+                content = avatar_file.read()
+                mime = avatar_file.content_type or "image/jpeg"
+                b64 = base64.b64encode(content).decode()
+                user_orm.avatar_url = f"data:{mime};base64,{b64}"
+            user_orm.save()
+            new_uname = user_orm.username
+            return redirect(f"/user/{new_uname}")
+        except Exception:
+            return redirect(f"/user/{username}")
+    return redirect(f"/user/{username}")
+
+
 def followers_view(request, username):
     user = _me(request)
     if not user:
         return redirect("/login")
-    data, _ = _api(f"/users/{username}/followers?page=1&size=100", token=_token(request))
+    try:
+        profile_orm = UserORM.objects.get(username=username)
+    except UserORM.DoesNotExist:
+        return redirect("/")
+    followers_qs = UserORM.objects.filter(following_set__following=profile_orm)
+    users = [
+        {
+            "username": u.username,
+            "bio": u.bio,
+            "avatar_url": u.avatar_url,
+            "follower_count": FollowORM.objects.filter(following=u).count(),
+        }
+        for u in followers_qs
+    ]
     return render(
         request,
         "profile/follow_list.html",
@@ -172,7 +352,7 @@ def followers_view(request, username):
             "current_user": user,
             "username": username,
             "title": "Підписники",
-            "users": data.get("items", []),
+            "users": users,
         },
     )
 
@@ -181,7 +361,20 @@ def following_view(request, username):
     user = _me(request)
     if not user:
         return redirect("/login")
-    data, _ = _api(f"/users/{username}/following?page=1&size=100", token=_token(request))
+    try:
+        profile_orm = UserORM.objects.get(username=username)
+    except UserORM.DoesNotExist:
+        return redirect("/")
+    following_qs = UserORM.objects.filter(follower_set__follower=profile_orm)
+    users = [
+        {
+            "username": u.username,
+            "bio": u.bio,
+            "avatar_url": u.avatar_url,
+            "follower_count": FollowORM.objects.filter(following=u).count(),
+        }
+        for u in following_qs
+    ]
     return render(
         request,
         "profile/follow_list.html",
@@ -190,6 +383,76 @@ def following_view(request, username):
             "current_user": user,
             "username": username,
             "title": "Підписки",
-            "users": data.get("items", []),
+            "users": users,
         },
     )
+
+
+# ── Admin panel ────────────────────────────────────────────────────────────────
+
+
+def admin_panel_view(request):
+    user = _me(request)
+    if not user or not user.get("is_admin"):
+        return redirect("/")
+    query = request.GET.get("q", "").strip()
+    users_qs = UserORM.objects.all().order_by("-id")
+    if query:
+        users_qs = users_qs.filter(username__icontains=query)
+    users = []
+    for u in users_qs:
+        users.append(
+            {
+                "username": u.username,
+                "email": u.email,
+                "is_active": u.is_active,
+                "created_at": u.created_at.strftime("%d.%m.%Y"),
+                "post_count": PostORM.objects.filter(author=u).count(),
+            }
+        )
+    recent_posts_qs = PostORM.objects.filter(status="PUBLISHED").select_related("author").order_by("-created_at")[:10]
+    stats = {
+        "total_users": UserORM.objects.count(),
+        "total_posts": PostORM.objects.filter(status="PUBLISHED").count(),
+        "total_likes": LikeORM.objects.count(),
+        "total_follows": FollowORM.objects.count(),
+    }
+    return render(
+        request,
+        "admin_panel/dashboard.html",
+        {
+            "user_logged_in": True,
+            "current_user": user,
+            "users": users,
+            "query": query,
+            "stats": stats,
+            "recent_posts": _posts_to_list(recent_posts_qs, user["id"]),
+        },
+    )
+
+
+def admin_ban_view(request, username):
+    user = _me(request)
+    if not user or not user.get("is_admin"):
+        return redirect("/")
+    if request.method == "POST":
+        UserORM.objects.filter(username=username).update(is_active=False)
+    return redirect("/admin-panel")
+
+
+def admin_unban_view(request, username):
+    user = _me(request)
+    if not user or not user.get("is_admin"):
+        return redirect("/")
+    if request.method == "POST":
+        UserORM.objects.filter(username=username).update(is_active=True)
+    return redirect("/admin-panel")
+
+
+def admin_delete_view(request, username):
+    user = _me(request)
+    if not user or not user.get("is_admin"):
+        return redirect("/")
+    if request.method == "POST" and username != user["username"]:
+        UserORM.objects.filter(username=username).delete()
+    return redirect("/admin-panel")

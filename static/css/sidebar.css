@@ -1,0 +1,156 @@
+/* ═══════════════════════════════════
+   SIDEBAR — compact design
+═══════════════════════════════════ */
+.sidebar {
+  width: 200px;
+  min-height: 100vh;
+  background: var(--ink-2);
+  border-right: 1px solid var(--ink-3);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 12px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px;
+  margin-bottom: 24px;
+}
+.brand-mark {
+  width: 30px; height: 30px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Playfair Display', serif;
+  font-weight: 900; font-size: .95rem;
+  color: var(--ink);
+  flex-shrink: 0;
+}
+.brand-text {
+  font-family: 'Playfair Display', serif;
+  font-size: .95rem; font-weight: 700;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--muted-2);
+  font-size: .88rem;
+  font-weight: 500;
+  transition: var(--transition);
+}
+.nav-item svg {
+  width: 18px; height: 18px;
+  stroke: currentColor; fill: none;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+  flex-shrink: 0;
+}
+.nav-item:hover { background: var(--ink-3); color: var(--paper); }
+.nav-item.active { background: var(--accent-bg); color: var(--accent); }
+
+.compose-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: var(--ink);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  font-size: .87rem;
+  font-weight: 600;
+  margin: 18px 0;
+  transition: var(--transition);
+  width: 100%;
+}
+.compose-btn:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(232,184,109,.3); }
+.compose-btn svg {
+  width: 16px; height: 16px;
+  stroke: var(--ink); fill: none;
+  stroke-width: 2.5; stroke-linecap: round;
+  flex-shrink: 0;
+}
+
+.sidebar-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px;
+  border-top: 1px solid var(--ink-3);
+  margin-top: auto;
+}
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 1;
+  overflow: hidden;
+}
+.user-avatar {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--accent), #7b6ef6);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Playfair Display', serif;
+  font-weight: 700; font-size: .85rem;
+  color: white; flex-shrink: 0;
+}
+.user-info { flex: 1; overflow: hidden; }
+.user-name { font-size: .82rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-email { font-size: .72rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.logout-btn {
+  background: none; border: none; color: var(--muted);
+  padding: 5px; border-radius: 6px; transition: var(--transition); flex-shrink: 0;
+}
+.logout-btn:hover { color: var(--red); background: rgba(224,92,92,.1); }
+.logout-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ── Main content ─────────────────── */
+.main-content {
+  flex: 1;
+  border-right: 1px solid var(--ink-3);
+  min-height: 100vh;
+}
+
+/* ── Right panel ──────────────────── */
+.right-panel {
+  width: 240px;
+  padding: 20px 16px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Responsive ───────────────────── */
+@media (max-width: 1100px) {
+  .app-layout { grid-template-columns: 200px 1fr; }
+  .right-panel { display: none; }
+}
+@media (max-width: 680px) {
+  .app-layout { grid-template-columns: 56px 1fr; }
+  .brand-text, .nav-item span, .compose-btn span,
+  .user-info { display: none; }
+  .compose-btn { padding: 11px; justify-content: center; }
+  .sidebar { padding: 16px 8px; }
+  .nav-item { justify-content: center; padding: 12px; }
+  .sidebar-user { justify-content: center; }
+}

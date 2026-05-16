@@ -1,4 +1,5 @@
 """bcrypt PasswordEncoder."""
+
 import bcrypt
 
 

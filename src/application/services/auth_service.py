@@ -1,4 +1,5 @@
 """AuthService — orchestrates registration and login use cases."""
+
 from __future__ import annotations
 
 from src.application.dtos import LoginRequest, RegisterRequest, TokenResponse

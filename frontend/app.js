@@ -7,7 +7,7 @@ const API = 'http://localhost:8000/api/v1';
 /* ── State ─────────────────────────────────── */
 const state = {
   token: localStorage.getItem('access_token') || null,
-  user:  JSON.parse(localStorage.getItem('user') || 'null'),
+  user: JSON.parse(localStorage.getItem('user') || 'null'),
   currentView: 'feed',
   profileUsername: null,
 };
@@ -16,10 +16,25 @@ const state = {
 async function api(path, options = {}) {
   const headers = { 'Content-Type': 'application/json' };
   if (state.token) headers['Authorization'] = `Bearer ${state.token}`;
+
   const res = await fetch(`${API}${path}`, { ...options, headers });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw { status: res.status, message: data.message || data.detail || 'Помилка сервера' };
+
+  if (!res.ok) throw { 
+    status: res.status, 
+    message: data.message || data.detail || 'Помилка сервера' 
+  };
   return data;
+}
+
+function escapeHtml(unsafe) {
+  if (unsafe == null) return '';
+  return String(unsafe)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 /* ── Time formatting ───────────────────────── */
@@ -31,17 +46,16 @@ function timeAgo(iso) {
   return new Date(iso).toLocaleDateString('uk-UA', { day:'numeric', month:'short' });
 }
 
-/* ── Toast ─────────────────────────────────── */
 let toastTimer;
 function toast(msg, type = 'success') {
   const el = document.getElementById('toast');
+  if (!el) return;
   el.textContent = msg;
   el.className = `toast ${type}`;
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.add('hidden'), 2800);
 }
 
-/* ── Show/hide views ───────────────────────── */
 function showView(name) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -54,11 +68,11 @@ function showView(name) {
   if (name === 'profile') loadMyProfile();
 }
 
-/* ── Auth screen ───────────────────────────── */
-function showAuth()  {
+function showAuth() {
   document.getElementById('auth-screen').classList.add('active');
   document.getElementById('app-screen').classList.remove('active');
 }
+
 function showApp() {
   document.getElementById('auth-screen').classList.remove('active');
   document.getElementById('app-screen').classList.add('active');
@@ -79,7 +93,8 @@ function updateSidebar() {
    AUTH
 ══════════════════════════════════════════ */
 function setLoading(btn, loading) {
-  btn.querySelector('span').style.opacity = loading ? '0' : '1';
+  const span = btn.querySelector('span');
+  if (span) span.style.opacity = loading ? '0' : '1';
   const loader = btn.querySelector('.btn-loader');
   if (loader) loader.classList.toggle('hidden', !loading);
   btn.disabled = loading;
@@ -87,11 +102,15 @@ function setLoading(btn, loading) {
 
 function showError(id, msg) {
   const el = document.getElementById(id);
-  el.textContent = msg;
-  el.classList.remove('hidden');
+  if (el) {
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
 }
+
 function hideError(id) {
-  document.getElementById(id).classList.add('hidden');
+  const el = document.getElementById(id);
+  if (el) el.classList.add('hidden');
 }
 
 // Tab switching
@@ -165,7 +184,7 @@ async function fetchAndSaveMe() {
     state.user = data;
     localStorage.setItem('user', JSON.stringify(data));
     updateStats(data);
-  } catch {}
+  } catch (e) {}
 }
 
 function updateStats(user) {
@@ -255,12 +274,6 @@ function renderPost(post, viewerUsername) {
   });
 
   return card;
-}
-
-function escapeHtml(str) {
-  return str
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;').replace(/\n/g,'<br>');
 }
 
 /* ── Like ─────────────────────────────────── */
@@ -436,7 +449,7 @@ function renderProfileHeader(user, isOwn, isFollowing) {
   div.innerHTML = `
     <div class="profile-top">
       <div class="profile-avatar" style="background:${avatarColor(user.username)}">
-        ${user.username[0].toUpperCase()}
+        ${escapeHtml(user.username[0].toUpperCase())}
       </div>
       ${!isOwn ? `
         <button class="follow-btn ${isFollowing ? 'unfollow' : 'follow'}" id="follow-toggle-btn">
@@ -446,16 +459,16 @@ function renderProfileHeader(user, isOwn, isFollowing) {
         <button class="btn-secondary" id="edit-profile-btn">Редагувати</button>
       `}
     </div>
-    <div class="profile-name">${user.username}</div>
-    <div class="profile-handle">${user.email}</div>
+    <div class="profile-name">${escapeHtml(user.username)}</div>
+    <div class="profile-handle">${escapeHtml(user.email)}</div>
     ${user.bio ? `<div class="profile-bio">${escapeHtml(user.bio)}</div>` : ''}
     <div class="profile-stats">
       <div class="profile-stat">
-        <strong>${user.follower_count}</strong>
+        <strong>${user.follower_count ?? 0}</strong>
         <span>підписників</span>
       </div>
       <div class="profile-stat">
-        <strong>${user.following_count}</strong>
+        <strong>${user.following_count ?? 0}</strong>
         <span>підписок</span>
       </div>
     </div>
@@ -654,7 +667,6 @@ document.addEventListener('keydown', e => {
       await fetchAndSaveMe();
       showApp();
     } catch {
-      // token expired
       state.token = null;
       localStorage.removeItem('access_token');
       showAuth();

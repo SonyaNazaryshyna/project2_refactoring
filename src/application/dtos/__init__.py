@@ -1,4 +1,5 @@
 """Data Transfer Objects for the application layer."""
+
 from __future__ import annotations
 from datetime import datetime
 from typing import Optional

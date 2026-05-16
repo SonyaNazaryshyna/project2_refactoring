@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ list_title }} — @{{ profile_username }}{% endblock %}
+
+{% block content %}
+<div class="view-header">
+  <a href="/user/{{ profile_username }}" class="back-btn">
+    <svg viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+  </a>
+  <h2>{{ list_title }}</h2>
+</div>
+
+<div class="users-list">
+  {% if users %}
+    {% for user in users %}
+    <div class="user-card">
+      <a href="/user/{{ user.username }}" class="user-card-avatar">{{ user.username|first|upper }}</a>
+      <div class="user-card-info">
+        <a href="/user/{{ user.username }}" class="user-card-name">@{{ user.username }}</a>
+        {% if user.bio %}<div class="user-card-bio">{{ user.bio|truncatechars:60 }}</div>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">👤</div>
+      <h3>Список порожній</h3>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

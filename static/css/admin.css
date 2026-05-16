@@ -1,0 +1,30 @@
+.admin-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px 22px;border-bottom:1px solid var(--border)}
+.asc{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:16px;text-align:center}
+.asc-i{font-size:1.6rem;margin-bottom:6px}
+.asc-n{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;color:var(--accent)}
+.asc-l{font-size:.74rem;color:var(--muted);margin-top:2px}
+.admin-section{border-bottom:1px solid var(--border)}
+.admin-sh{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;border-bottom:1px solid var(--border)}
+.admin-sh h3{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700}
+.admin-sf{display:flex;gap:8px;align-items:center}
+.admin-sf input{background:var(--bg-input);border:1px solid var(--border-2);border-radius:var(--rs);padding:7px 11px;color:var(--text);font-size:.85rem;outline:none;width:180px}
+.admin-sf input:focus{border-color:var(--accent)}
+.admin-tw{overflow-x:auto}
+.admin-t{width:100%;border-collapse:collapse}
+.admin-t th{text-align:left;padding:10px 16px;font-size:.74rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
+.admin-t td{padding:12px 16px;border-bottom:1px solid var(--border);font-size:.86rem;vertical-align:middle}
+.admin-t tr:hover td{background:rgba(128,128,128,.04)}
+.row-off td{opacity:.55}
+.au-link{display:flex;align-items:center;gap:9px;color:inherit}
+.au-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#7b6ef6);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-weight:700;font-size:.8rem;color:#fff;flex-shrink:0}
+.au-name{font-weight:600;font-size:.85rem}
+.au-date{font-size:.72rem;color:var(--muted)}
+.au-email{color:var(--text-2);font-size:.82rem}
+.au-acts{display:flex;gap:6px;align-items:center}
+.adm-btn{border:none;border-radius:6px;padding:5px 10px;font-size:.78rem;font-weight:500;cursor:pointer;transition:var(--tr)}
+.adm-btn.ban{background:rgba(224,92,92,.12);color:#f08080}.adm-btn.ban:hover{background:rgba(224,92,92,.22)}
+.adm-btn.unban{background:rgba(92,184,138,.12);color:var(--green)}.adm-btn.unban:hover{background:rgba(92,184,138,.22)}
+.adm-btn.del{background:rgba(224,92,92,.08);color:#f08080}.adm-btn.del:hover{background:rgba(224,92,92,.2)}
+.badge-on{background:rgba(92,184,138,.12);color:var(--green);border-radius:20px;padding:3px 9px;font-size:.76rem;font-weight:500}
+.badge-off{background:rgba(224,92,92,.12);color:#f08080;border-radius:20px;padding:3px 9px;font-size:.76rem;font-weight:500}
+@media(max-width:800px){.admin-stats{grid-template-columns:repeat(2,1fr)}}

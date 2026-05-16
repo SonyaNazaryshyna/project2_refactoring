@@ -1,40 +1,20 @@
-.prof-header { padding: 22px 22px 16px; border-bottom: 1px solid var(--ink-3); }
-.prof-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
-.prof-avatar {
-  width: 66px; height: 66px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), #7b6ef6);
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700;
-  color: #fff; border: 3px solid var(--ink-2);
-}
-.prof-name { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; margin-bottom: 2px; }
-.prof-email { color: var(--muted); font-size: .8rem; margin-bottom: 7px; }
-.prof-bio { font-size: .87rem; color: var(--muted-2); line-height: 1.6; margin-bottom: 10px; }
-.prof-stats-row { display: flex; gap: 18px; }
-.prof-stat { font-size: .82rem; color: var(--muted-2); transition: var(--tr); }
-.prof-stat:hover { color: var(--accent); }
-.prof-stat strong { color: var(--paper); font-family: 'Playfair Display', serif; font-size: .92rem; }
-
-.follow-btn {
-  border-radius: 20px; padding: 7px 16px; font-size: .84rem; font-weight: 600;
-  border: 2px solid var(--accent); transition: var(--tr);
-  background: var(--accent); color: var(--ink);
-}
-.follow-btn.is-following { background: transparent; color: var(--accent); }
-.follow-btn:hover:not(.is-following) { background: var(--accent-2); }
-.follow-btn.is-following:hover { border-color: var(--red); color: var(--red); background: rgba(224,92,92,.08); }
-
-.prof-tabs { display: flex; border-bottom: 1px solid var(--ink-3); padding: 0 22px; }
-.prof-tab {
-  padding: 10px 14px; font-size: .84rem; font-weight: 500; color: var(--muted);
-  background: none; border: none; border-bottom: 2px solid transparent;
-  transition: var(--tr); margin-bottom: -1px;
-}
-.prof-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-#edit-bio, #edit-avatar {
-  width: 100%; background: var(--ink-3); border: 1px solid var(--ink-4);
-  border-radius: 8px; padding: 11px 13px; color: var(--paper); font-size: .93rem; outline: none;
-}
-#edit-bio:focus, #edit-avatar:focus { border-color: var(--accent); }
-#edit-bio { resize: vertical; line-height: 1.6; }
+.prof-header{padding:22px 22px 16px;border-bottom:1px solid var(--border)}
+.prof-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:11px}
+.prof-avatar{width:66px;height:66px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#7b6ef6);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:1.65rem;font-weight:700;color:#fff;border:3px solid var(--bg);object-fit:cover}
+.prof-name{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;margin-bottom:2px}
+.prof-email{color:var(--muted);font-size:.8rem;margin-bottom:7px}
+.prof-bio{font-size:.87rem;color:var(--text-2);line-height:1.6;margin-bottom:10px}
+.prof-stats-row{display:flex;gap:16px}
+.prof-stat{font-size:.81rem;color:var(--text-2);transition:var(--tr)}
+.prof-stat:hover{color:var(--accent)}
+.prof-stat strong{color:var(--text);font-family:'Playfair Display',serif;font-size:.93rem}
+.follow-btn{border-radius:20px;padding:7px 15px;font-size:.83rem;font-weight:600;border:2px solid var(--accent);transition:var(--tr);background:var(--accent);color:#1a1a1a;cursor:pointer}
+.follow-btn.is-following{background:transparent;color:var(--accent)}
+.follow-btn.is-following:hover{border-color:var(--red);color:var(--red);background:rgba(224,92,92,.08)}
+.follow-btn:hover:not(.is-following){background:var(--accent-2)}
+.prof-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 22px}
+.prof-tab{padding:10px 13px;font-size:.83rem;font-weight:500;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;transition:var(--tr);margin-bottom:-1px;cursor:pointer}
+.prof-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+#edit-bio,#edit-avatar{width:100%;background:var(--bg-input);border:1px solid var(--border-2);border-radius:8px;padding:10px 13px;color:var(--text);font-size:.93rem;outline:none}
+#edit-bio:focus,#edit-avatar:focus{border-color:var(--accent)}
+#edit-bio{resize:vertical;line-height:1.6}

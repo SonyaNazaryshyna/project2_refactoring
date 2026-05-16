@@ -1,4 +1,5 @@
 """Notification sender — delegates to Celery tasks."""
+
 from src.domain.entities.user import User
 from src.domain.ports import NotificationSender
 from src.infrastructure.external import tasks

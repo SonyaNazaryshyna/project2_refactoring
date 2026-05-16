@@ -1,4 +1,5 @@
 """Async Celery tasks for background processing."""
+
 from __future__ import annotations
 import logging
 from src.infrastructure.external.celery_app import celery_app

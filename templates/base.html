@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="uk" data-theme="dark">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>{% block title %}Мікроблог{% endblock %}</title>
+  <title>{% block title %}Whispr{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/static/css/base.css"/>
@@ -15,11 +15,10 @@
 {% if user_logged_in %}
 <div class="app-layout">
 
-  <!-- SIDEBAR -->
   <aside class="sidebar">
     <a href="/" class="sidebar-brand">
-      <div class="brand-mark">М</div>
-      <span class="brand-text">мікроблог</span>
+      <div class="brand-mark">W</div>
+      <span class="brand-text">Whispr</span>
     </a>
     <nav class="sidebar-nav">
       <a href="/" class="nav-item {% block nav_feed %}{% endblock %}">
@@ -27,54 +26,73 @@
         <span>Стрічка</span>
       </a>
       <a href="/explore" class="nav-item {% block nav_explore %}{% endblock %}">
+        <svg viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+        <span>Всі дописи</span>
+      </a>
+      <a href="/search" class="nav-item {% block nav_search %}{% endblock %}">
         <svg viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-        <span>Огляд</span>
+        <span>Пошук</span>
       </a>
       <a href="/profile" class="nav-item {% block nav_profile %}{% endblock %}">
         <svg viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
         <span>Профіль</span>
       </a>
+      {% if current_user.is_admin %}
+      <a href="/admin-panel" class="nav-item {% block nav_admin %}{% endblock %}">
+        <svg viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <span>Адмін</span>
+      </a>
+      {% endif %}
     </nav>
+
     <button class="compose-btn" onclick="openCompose()">
       <svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
       <span>Новий допис</span>
     </button>
-    <div class="sidebar-user">
-      <div class="s-avatar">{{ current_user.username|first|upper }}</div>
-      <div class="s-info">
-        <div class="s-name">{{ current_user.username }}</div>
-        <div class="s-email">{{ current_user.email }}</div>
+
+    <div class="sidebar-bottom">
+      <button class="theme-toggle" id="theme-toggle" title="Змінити тему">
+        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+      </button>
+      <div class="sidebar-user">
+        {% if current_user.avatar_url %}
+          <img src="{{ current_user.avatar_url }}" class="s-avatar s-img" alt="av"/>
+        {% else %}
+          <div class="s-avatar">{{ current_user.username|first|upper }}</div>
+        {% endif %}
+        <div class="s-info">
+          <div class="s-name">{{ current_user.username }}</div>
+          <div class="s-email">{{ current_user.email }}</div>
+        </div>
+        <a href="/logout" class="s-logout" title="Вийти">
+          <svg viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </a>
       </div>
-      <a href="/logout" class="s-logout" title="Вийти">
-        <svg viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-      </a>
     </div>
   </aside>
 
-  <!-- MAIN -->
-  <main class="main-content">
-    {% block content %}{% endblock %}
-  </main>
+  <main class="main-content">{% block content %}{% endblock %}</main>
 
-  <!-- RIGHT PANEL -->
   <aside class="right-panel">
     {% block right_panel %}
     <div class="panel-card">
       <h3>Статистика</h3>
       <div class="panel-stats">
-        <div class="p-stat">
-          <span class="p-num">{{ current_user.follower_count|default:"0" }}</span>
-          <span class="p-label">підписників</span>
-        </div>
-        <div class="p-stat">
-          <span class="p-num">{{ current_user.following_count|default:"0" }}</span>
-          <span class="p-label">підписок</span>
-        </div>
+        <div class="p-stat"><span class="p-num">{{ current_user.follower_count|default:"0" }}</span><span class="p-label">підписників</span></div>
+        <div class="p-stat"><span class="p-num">{{ current_user.following_count|default:"0" }}</span><span class="p-label">підписок</span></div>
       </div>
+    </div>
+    <div class="panel-card">
+      <h3>Пошук</h3>
+      <form method="GET" action="/search">
+        <div class="panel-search-wrap">
+          <input type="text" name="q" placeholder="Знайти людей…"/>
+        </div>
+      </form>
     </div>
     {% endblock %}
   </aside>
-
 </div>
 
 <!-- COMPOSE MODAL -->
@@ -86,7 +104,11 @@
     </div>
     <div class="modal-body">
       <div class="compose-row">
-        <div class="c-avatar">{{ current_user.username|first|upper }}</div>
+        {% if current_user.avatar_url %}
+          <img src="{{ current_user.avatar_url }}" class="c-avatar s-img" alt=""/>
+        {% else %}
+          <div class="c-avatar">{{ current_user.username|first|upper }}</div>
+        {% endif %}
         <div class="c-wrap">
           <textarea id="compose-text" placeholder="Що у тебе на думці?" maxlength="280" rows="4"></textarea>
           <div class="c-footer">
@@ -95,7 +117,7 @@
           </div>
         </div>
       </div>
-      <div id="compose-error" class="form-error hidden" style="margin-top:12px"></div>
+      <div id="compose-error" class="form-error hidden"></div>
     </div>
   </div>
 </div>
@@ -108,6 +130,7 @@
 
 <script src="/static/js/utils.js"></script>
 <script src="/static/js/compose.js"></script>
+<script src="/static/js/theme.js"></script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -1,4 +1,5 @@
 """Request logging middleware."""
+
 import logging
 import time
 

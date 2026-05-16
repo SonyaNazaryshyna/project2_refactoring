@@ -1,6 +1,7 @@
 """
 Django settings for microblog project.
 """
+
 import os
 from pathlib import Path
 from datetime import timedelta

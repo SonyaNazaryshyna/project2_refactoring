@@ -1,4 +1,5 @@
 """Custom DRF authentication using JWT."""
+
 from __future__ import annotations
 import importlib
 

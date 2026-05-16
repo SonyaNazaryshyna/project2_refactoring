@@ -1,7 +1,8 @@
 """Post domain entity — Rich Domain Model."""
+
 from __future__ import annotations
 from dataclasses import dataclass
-import datetime
+from datetime import datetime
 from enum import Enum
 from typing import Optional
 from uuid import UUID, uuid4
@@ -24,8 +25,8 @@ class Post:
     content: str
     status: PostStatus
     like_count: int
-    created_at: datetime.datetime
-    updated_at: datetime.datetime
+    created_at: datetime
+    updated_at: datetime
     parent_id: Optional[UUID] = None  # for replies
 
     MAX_CONTENT_LENGTH = 280
@@ -34,7 +35,7 @@ class Post:
     def create(cls, author_id: UUID, content: str, parent_id: Optional[UUID] = None) -> "Post":
         """Factory method — validates and creates a new post."""
         cls._validate_content(content)
-        now = datetime.datetime.now(datetime.UTC)
+        now = datetime.utcnow()
         return cls(
             id=uuid4(),
             author_id=author_id,
@@ -59,14 +60,14 @@ class Post:
             raise DomainException("Only published posts can be edited.")
         self._validate_content(new_content)
         self.content = new_content
-        self.updated_at = datetime.datetime.now(datetime.UTC)
+        self.updated_at = datetime.utcnow()
 
     def delete(self) -> None:
         """Soft delete — business logic lives here, not in the service."""
         if self.status == PostStatus.DELETED:
             raise DomainException("Post is already deleted.")
         self.status = PostStatus.DELETED
-        self.updated_at = datetime.datetime.now(datetime.UTC)
+        self.updated_at = datetime.utcnow()
 
     def increment_likes(self) -> None:
         if self.status != PostStatus.PUBLISHED:

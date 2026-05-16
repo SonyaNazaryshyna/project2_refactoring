@@ -1,5 +1,10 @@
 """Django ORM models — infrastructure layer only."""
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+
+from django.contrib.auth.models import (
+    AbstractBaseUser,
+    BaseUserManager,
+    PermissionsMixin,
+)
 from django.db import models
 import uuid
 
@@ -43,7 +48,11 @@ class UserORM(AbstractBaseUser, PermissionsMixin):
 
 
 class PostORM(models.Model):
-    STATUS_CHOICES = [("DRAFT", "Draft"), ("PUBLISHED", "Published"), ("DELETED", "Deleted")]
+    STATUS_CHOICES = [
+        ("DRAFT", "Draft"),
+        ("PUBLISHED", "Published"),
+        ("DELETED", "Deleted"),
+    ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     author = models.ForeignKey(UserORM, on_delete=models.CASCADE, related_name="posts")

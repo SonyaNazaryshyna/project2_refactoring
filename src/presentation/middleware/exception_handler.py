@@ -1,4 +1,5 @@
 """Global exception handler — client never sees a stack trace."""
+
 from __future__ import annotations
 from datetime import datetime, timezone
 from rest_framework.views import exception_handler
@@ -18,27 +19,52 @@ def global_exception_handler(exc, context):
 
     if isinstance(exc, DomainException):
         return Response(
-            {"status": 422, "error": "Domain Rule Violation", "message": str(exc), "timestamp": timestamp},
+            {
+                "status": 422,
+                "error": "Domain Rule Violation",
+                "message": str(exc),
+                "timestamp": timestamp,
+            },
             status=status.HTTP_422_UNPROCESSABLE_ENTITY,
         )
     if isinstance(exc, AuthenticationError):
         return Response(
-            {"status": 401, "error": "Unauthorized", "message": str(exc), "timestamp": timestamp},
+            {
+                "status": 401,
+                "error": "Unauthorized",
+                "message": str(exc),
+                "timestamp": timestamp,
+            },
             status=status.HTTP_401_UNAUTHORIZED,
         )
     if isinstance(exc, ConflictError):
         return Response(
-            {"status": 409, "error": "Conflict", "message": str(exc), "timestamp": timestamp},
+            {
+                "status": 409,
+                "error": "Conflict",
+                "message": str(exc),
+                "timestamp": timestamp,
+            },
             status=status.HTTP_409_CONFLICT,
         )
     if isinstance(exc, NotFoundError):
         return Response(
-            {"status": 404, "error": "Not Found", "message": str(exc), "timestamp": timestamp},
+            {
+                "status": 404,
+                "error": "Not Found",
+                "message": str(exc),
+                "timestamp": timestamp,
+            },
             status=status.HTTP_404_NOT_FOUND,
         )
     if isinstance(exc, ForbiddenError):
         return Response(
-            {"status": 403, "error": "Forbidden", "message": str(exc), "timestamp": timestamp},
+            {
+                "status": 403,
+                "error": "Forbidden",
+                "message": str(exc),
+                "timestamp": timestamp,
+            },
             status=status.HTTP_403_FORBIDDEN,
         )
 

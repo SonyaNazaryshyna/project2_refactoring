@@ -1,4 +1,5 @@
 """Auth REST controllers."""
+
 import importlib
 
 _jwt = importlib.import_module("jwt")

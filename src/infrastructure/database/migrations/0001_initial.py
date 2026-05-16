@@ -13,9 +13,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="UserORM",
             fields=[
-                ("id", models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)),
+                (
+                    "id",
+                    models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True),
+                ),
                 ("password", models.CharField(max_length=128, verbose_name="password")),
-                ("last_login", models.DateTimeField(blank=True, null=True, verbose_name="last login")),
+                (
+                    "last_login",
+                    models.DateTimeField(blank=True, null=True, verbose_name="last login"),
+                ),
                 ("is_superuser", models.BooleanField(default=False)),
                 ("username", models.CharField(max_length=30, unique=True)),
                 ("email", models.EmailField(max_length=254, unique=True)),
@@ -38,12 +44,19 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="PostORM",
             fields=[
-                ("id", models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)),
+                (
+                    "id",
+                    models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True),
+                ),
                 ("content", models.CharField(max_length=280)),
                 (
                     "status",
                     models.CharField(
-                        choices=[("DRAFT", "Draft"), ("PUBLISHED", "Published"), ("DELETED", "Deleted")],
+                        choices=[
+                            ("DRAFT", "Draft"),
+                            ("PUBLISHED", "Published"),
+                            ("DELETED", "Deleted"),
+                        ],
                         default="PUBLISHED",
                         max_length=20,
                     ),

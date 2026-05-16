@@ -1,31 +1,23 @@
 {% extends "base.html" %}
-{% block title %}Стрічка — Мікроблог{% endblock %}
+{% block title %}Стрічка — Whispr{% endblock %}
 {% block nav_feed %}active{% endblock %}
-
 {% block content %}
 <div class="page-header">
   <h2>Стрічка</h2>
-  <button class="icon-btn" onclick="location.reload()" title="Оновити">
+  <button class="icon-btn" onclick="location.reload()">
     <svg viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
   </button>
 </div>
-
 <div class="posts-list">
   {% if posts %}
-    {% for post in posts %}
-      {% include "partials/post_card.html" %}
-    {% endfor %}
+    {% for post in posts %}{% include "partials/post_card.html" %}{% endfor %}
   {% else %}
-    <div class="empty-state">
-      <div class="empty-icon">📭</div>
-      <h3>Стрічка порожня</h3>
-      <p>Підпишись на когось щоб бачити їхні дописи</p>
-      <a href="/explore" class="btn-outline" style="margin-top:8px">Знайти людей</a>
-    </div>
+  <div class="empty-state">
+    <div class="empty-icon">📭</div>
+    <h3>Стрічка порожня</h3>
+    <p>Підпишись на когось або переглянь <a href="/explore" style="color:var(--accent)">всі дописи</a></p>
+  </div>
   {% endif %}
 </div>
 {% endblock %}
-
-{% block extra_js %}
-<script src="/static/js/posts.js"></script>
-{% endblock %}
+{% block extra_js %}<script src="/static/js/posts.js"></script>{% endblock %}

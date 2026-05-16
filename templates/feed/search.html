@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Пошук — Whispr{% endblock %}
+{% block nav_search %}active{% endblock %}
+{% block content %}
+<div class="page-header"><h2>🔍 Пошук людей</h2></div>
+<div class="search-box-wrap">
+  <form method="GET" action="/search" class="search-form">
+    <div class="search-input-wrap">
+      <svg viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input type="text" name="q" value="{{ query }}" placeholder="Введи @username або ім'я…" autofocus/>
+    </div>
+    <button type="submit" class="btn-gold btn-sm">Знайти</button>
+  </form>
+</div>
+{% if query %}
+  <div class="search-label">{% if users %}Знайдено: {{ users|length }}{% else %}Нікого не знайдено за «{{ query }}»{% endif %}</div>
+  <div class="users-list">
+    {% for u in users %}
+    <a href="/user/{{ u.username }}" class="user-row">
+      {% if u.avatar_url %}<img src="{{ u.avatar_url }}" class="ur-avatar ur-img" alt=""/>
+      {% else %}<div class="ur-avatar">{{ u.username|first|upper }}</div>{% endif %}
+      <div class="ur-info">
+        <div class="ur-name">@{{ u.username }}</div>
+        {% if u.bio %}<div class="ur-bio">{{ u.bio|truncatechars:70 }}</div>{% endif %}
+        <div class="ur-stats">{{ u.follower_count }} підписників</div>
+      </div>
+    </a>
+    {% empty %}
+    <div class="empty-state"><div class="empty-icon">🔍</div><h3>Нікого не знайдено</h3><p>Спробуй інший запит</p></div>
+    {% endfor %}
+  </div>
+{% else %}
+<div class="empty-state">
+  <div class="empty-icon">👥</div>
+  <h3>Знайди друзів на Whispr</h3>
+  <p>Введи ім'я або username у рядок пошуку вище</p>
+</div>
+{% endif %}
+{% endblock %}
