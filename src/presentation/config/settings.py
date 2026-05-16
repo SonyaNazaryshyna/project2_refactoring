@@ -66,7 +66,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.environ.get("POSTGRES_DB", "microblog"),
         "USER": os.environ.get("POSTGRES_USER", "microblog"),
-        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "microblog_pass"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD"),
         "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
         "PORT": os.environ.get("POSTGRES_PORT", "5432"),
     }
