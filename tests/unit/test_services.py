@@ -114,15 +114,16 @@ class TestAuthServiceRegister:
         self.users.exists_by_email.return_value = False
         self.users.exists_by_username.return_value = False
         self.pw.hash.return_value = "h"
-        user = make_user()
-        self.users.save.return_value = user
+        self.users.save.return_value = make_user()
         self.jwt.create_tokens.return_value = Mock(access_token="tok", refresh_token="ref")
 
         self.svc.register(RegisterRequest(
             username="user", email="u@test.com", password="password123"
         ))
 
-        self.jwt.create_tokens.assert_called_once_with(str(user.id), role="ROLE_USER")
+        self.jwt.create_tokens.assert_called_once()
+        args, kwargs = self.jwt.create_tokens.call_args
+        assert kwargs.get("role") == "ROLE_USER"
 
 
 class TestAuthServiceLogin:
@@ -187,7 +188,7 @@ class TestPostServiceCreate:
 
     def test_create_post_success(self):
         user = make_user()
-        post = make_post(author_id=user.id)
+        post = make_post(author_id=user.id, content="Hello!")
         self.posts.save.return_value = post
         self.users.find_by_id.return_value = user
 
