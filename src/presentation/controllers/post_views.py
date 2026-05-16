@@ -17,7 +17,8 @@ def posts_list(request):
         result = svc.get_user_posts(
             viewer_id=request.user.id,
             author_id=request.user.id,
-            page=page, size=size,
+            page=page,
+            size=size,
         )
         return Response(result.model_dump())
 
@@ -33,8 +34,10 @@ def post_detail(request, post_id: str):
 
     if request.method == "GET":
         from src.application.services.post_service import NotFoundError
+
         post = svc._get_or_raise(pid)
         from src.infrastructure.database.repositories import DjangoUserRepository, DjangoLikeRepository
+
         author = DjangoUserRepository().find_by_id(post.author_id)
         liked = DjangoLikeRepository().has_liked(request.user.id, pid)
         return Response(svc._to_response(post, str(author.username), liked).model_dump())

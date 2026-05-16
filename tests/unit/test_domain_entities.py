@@ -10,6 +10,7 @@ from src.domain.exceptions import DomainException
 
 # ── Post entity tests ──────────────────────────────────────────────────────────
 
+
 class TestPostCreation:
     def test_create_valid_post(self):
         post = Post.create(author_id=uuid4(), content="Hello world!")
@@ -90,6 +91,7 @@ class TestPostLifecycle:
 
 
 # ── Value Object tests ─────────────────────────────────────────────────────────
+
 
 class TestEmailVO:
     def test_valid_email(self):

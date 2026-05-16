@@ -31,21 +31,24 @@ def _me(request):
 
 # ── Auth ───────────────────────────────────────────────────────────────────────
 
+
 def login_view(request):
     if _token(request):
         return redirect("/")
     if request.method == "POST":
-        data, status = _api("/auth/login", method="POST", json={
-            "email": request.POST.get("email"),
-            "password": request.POST.get("password"),
-        })
+        data, status = _api(
+            "/auth/login",
+            method="POST",
+            json={
+                "email": request.POST.get("email"),
+                "password": request.POST.get("password"),
+            },
+        )
         if status == 200:
             resp = redirect("/")
-            resp.set_cookie("access_token", data["access_token"],
-                            httponly=False, samesite="Lax", max_age=3600)
+            resp.set_cookie("access_token", data["access_token"], httponly=False, samesite="Lax", max_age=3600)
             return resp
-        return render(request, "auth/login.html",
-                      {"error": data.get("message", "Невірний email або пароль")})
+        return render(request, "auth/login.html", {"error": data.get("message", "Невірний email або пароль")})
     return render(request, "auth/login.html")
 
 
@@ -53,19 +56,21 @@ def register_view(request):
     if _token(request):
         return redirect("/")
     if request.method == "POST":
-        data, status = _api("/auth/register", method="POST", json={
-            "username": request.POST.get("username"),
-            "email":    request.POST.get("email"),
-            "password": request.POST.get("password"),
-            "bio":      request.POST.get("bio", ""),
-        })
+        data, status = _api(
+            "/auth/register",
+            method="POST",
+            json={
+                "username": request.POST.get("username"),
+                "email": request.POST.get("email"),
+                "password": request.POST.get("password"),
+                "bio": request.POST.get("bio", ""),
+            },
+        )
         if status == 201:
             resp = redirect("/")
-            resp.set_cookie("access_token", data["access_token"],
-                            httponly=False, samesite="Lax", max_age=3600)
+            resp.set_cookie("access_token", data["access_token"], httponly=False, samesite="Lax", max_age=3600)
             return resp
-        return render(request, "auth/register.html",
-                      {"error": data.get("message", "Помилка реєстрації")})
+        return render(request, "auth/register.html", {"error": data.get("message", "Помилка реєстрації")})
     return render(request, "auth/register.html")
 
 
@@ -77,16 +82,21 @@ def logout_view(request):
 
 # ── Feed ───────────────────────────────────────────────────────────────────────
 
+
 def feed_view(request):
     user = _me(request)
     if not user:
         return redirect("/login")
     data, _ = _api("/feed?page=1&size=30", token=_token(request))
-    return render(request, "feed/feed.html", {
-        "user_logged_in": True,
-        "current_user": user,
-        "posts": data.get("items", []),
-    })
+    return render(
+        request,
+        "feed/feed.html",
+        {
+            "user_logged_in": True,
+            "current_user": user,
+            "posts": data.get("items", []),
+        },
+    )
 
 
 def explore_view(request):
@@ -94,14 +104,19 @@ def explore_view(request):
     if not user:
         return redirect("/login")
     data, _ = _api("/posts?page=1&size=40", token=_token(request))
-    return render(request, "feed/explore.html", {
-        "user_logged_in": True,
-        "current_user": user,
-        "posts": data.get("items", []),
-    })
+    return render(
+        request,
+        "feed/explore.html",
+        {
+            "user_logged_in": True,
+            "current_user": user,
+            "posts": data.get("items", []),
+        },
+    )
 
 
 # ── Profile ────────────────────────────────────────────────────────────────────
+
 
 def my_profile_view(request):
     user = _me(request)
@@ -122,8 +137,7 @@ def user_profile_view(request, username):
 
     # Get posts for this user
     all_data, _ = _api("/posts?page=1&size=100", token=token)
-    posts = [p for p in all_data.get("items", [])
-             if p.get("author_username") == username]
+    posts = [p for p in all_data.get("items", []) if p.get("author_username") == username]
 
     is_own = current_user["username"] == username
     is_following = False
@@ -131,14 +145,18 @@ def user_profile_view(request, username):
         flw, _ = _api(f"/users/{current_user['username']}/following?page=1&size=200", token=token)
         is_following = any(u.get("username") == username for u in flw.get("items", []))
 
-    return render(request, "profile/profile.html", {
-        "user_logged_in": True,
-        "current_user": current_user,
-        "profile_user": profile,
-        "posts": posts,
-        "is_own": is_own,
-        "is_following": is_following,
-    })
+    return render(
+        request,
+        "profile/profile.html",
+        {
+            "user_logged_in": True,
+            "current_user": current_user,
+            "profile_user": profile,
+            "posts": posts,
+            "is_own": is_own,
+            "is_following": is_following,
+        },
+    )
 
 
 def followers_view(request, username):
@@ -146,13 +164,17 @@ def followers_view(request, username):
     if not user:
         return redirect("/login")
     data, _ = _api(f"/users/{username}/followers?page=1&size=100", token=_token(request))
-    return render(request, "profile/follow_list.html", {
-        "user_logged_in": True,
-        "current_user": user,
-        "username": username,
-        "title": "Підписники",
-        "users": data.get("items", []),
-    })
+    return render(
+        request,
+        "profile/follow_list.html",
+        {
+            "user_logged_in": True,
+            "current_user": user,
+            "username": username,
+            "title": "Підписники",
+            "users": data.get("items", []),
+        },
+    )
 
 
 def following_view(request, username):
@@ -160,10 +182,14 @@ def following_view(request, username):
     if not user:
         return redirect("/login")
     data, _ = _api(f"/users/{username}/following?page=1&size=100", token=_token(request))
-    return render(request, "profile/follow_list.html", {
-        "user_logged_in": True,
-        "current_user": user,
-        "username": username,
-        "title": "Підписки",
-        "users": data.get("items", []),
-    })
+    return render(
+        request,
+        "profile/follow_list.html",
+        {
+            "user_logged_in": True,
+            "current_user": user,
+            "username": username,
+            "title": "Підписки",
+            "users": data.get("items", []),
+        },
+    )

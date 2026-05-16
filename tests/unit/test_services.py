@@ -34,6 +34,7 @@ def make_post(author_id=None, content="Test post"):
 
 # ── PostService tests ──────────────────────────────────────────────────────────
 
+
 class TestPostService:
     def setup_method(self):
         self.mock_posts = Mock(spec=PostRepository)
@@ -101,6 +102,7 @@ class TestPostService:
 
 
 # ── AuthService tests ──────────────────────────────────────────────────────────
+
 
 class TestAuthService:
     def setup_method(self):

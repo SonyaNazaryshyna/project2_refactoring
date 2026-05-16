@@ -105,13 +105,17 @@ class DjangoPostRepository(PostRepository):
 
     def find_by_author(self, author_id: UUID, page: int, size: int) -> list[Post]:
         offset = (page - 1) * size
-        qs = PostORM.objects.filter(author_id=author_id, status="PUBLISHED").order_by("-created_at")[offset:offset + size]
+        qs = PostORM.objects.filter(author_id=author_id, status="PUBLISHED").order_by("-created_at")[
+            offset : offset + size
+        ]
         return [_orm_to_post(p) for p in qs]
 
     def find_feed(self, user_id: UUID, page: int, size: int) -> list[Post]:
         following_ids = FollowORM.objects.filter(follower_id=user_id).values_list("following_id", flat=True)
         offset = (page - 1) * size
-        qs = PostORM.objects.filter(author_id__in=following_ids, status="PUBLISHED").order_by("-created_at")[offset:offset + size]
+        qs = PostORM.objects.filter(author_id__in=following_ids, status="PUBLISHED").order_by("-created_at")[
+            offset : offset + size
+        ]
         return [_orm_to_post(p) for p in qs]
 
     def delete(self, post_id: UUID) -> None:
@@ -130,12 +134,12 @@ class DjangoFollowRepository(FollowRepository):
 
     def get_followers(self, user_id: UUID, page: int, size: int) -> list[User]:
         offset = (page - 1) * size
-        qs = UserORM.objects.filter(following_set__following_id=user_id)[offset:offset + size]
+        qs = UserORM.objects.filter(following_set__following_id=user_id)[offset : offset + size]
         return [_orm_to_user(u) for u in qs]
 
     def get_following(self, user_id: UUID, page: int, size: int) -> list[User]:
         offset = (page - 1) * size
-        qs = UserORM.objects.filter(follower_set__follower_id=user_id)[offset:offset + size]
+        qs = UserORM.objects.filter(follower_set__follower_id=user_id)[offset : offset + size]
         return [_orm_to_user(u) for u in qs]
 
 

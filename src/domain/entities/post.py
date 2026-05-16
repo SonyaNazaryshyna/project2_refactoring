@@ -51,9 +51,7 @@ class Post:
         if not content or not content.strip():
             raise DomainException("Post content cannot be empty.")
         if len(content) > Post.MAX_CONTENT_LENGTH:
-            raise DomainException(
-                f"Post content cannot exceed {Post.MAX_CONTENT_LENGTH} characters."
-            )
+            raise DomainException(f"Post content cannot exceed {Post.MAX_CONTENT_LENGTH} characters.")
 
     def edit(self, new_content: str) -> None:
         """Business rule: only PUBLISHED posts can be edited."""

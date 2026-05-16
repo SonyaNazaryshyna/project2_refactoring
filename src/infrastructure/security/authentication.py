@@ -1,6 +1,7 @@
 """Custom DRF authentication using JWT."""
 from __future__ import annotations
 import importlib
+
 _jwt = importlib.import_module("jwt")
 
 from rest_framework.authentication import BaseAuthentication

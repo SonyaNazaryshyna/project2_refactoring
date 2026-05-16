@@ -63,7 +63,10 @@ class UserService:
         followers = self._follows.get_followers(user.id, page, size)
         return PaginatedResponse(
             items=[self._to_response(u) for u in followers],
-            total=len(followers), page=page, size=size, pages=1,
+            total=len(followers),
+            page=page,
+            size=size,
+            pages=1,
         )
 
     def get_following(self, username: str, page: int, size: int) -> PaginatedResponse:
@@ -73,7 +76,10 @@ class UserService:
         following = self._follows.get_following(user.id, page, size)
         return PaginatedResponse(
             items=[self._to_response(u) for u in following],
-            total=len(following), page=page, size=size, pages=1,
+            total=len(following),
+            page=page,
+            size=size,
+            pages=1,
         )
 
     @staticmethod

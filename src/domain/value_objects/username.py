@@ -14,9 +14,7 @@ class Username:
 
     def __post_init__(self) -> None:
         if not _USERNAME_RE.match(self.value):
-            raise DomainException(
-                "Username must be 3-30 characters and contain only letters, digits, or underscores."
-            )
+            raise DomainException("Username must be 3-30 characters and contain only letters, digits, or underscores.")
 
     def __str__(self) -> str:
         return self.value

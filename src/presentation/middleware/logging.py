@@ -15,6 +15,9 @@ class RequestLoggingMiddleware:
         duration_ms = (time.monotonic() - start) * 1000
         logger.info(
             "%s %s → %d (%.1fms)",
-            request.method, request.path, response.status_code, duration_ms,
+            request.method,
+            request.path,
+            response.status_code,
+            duration_ms,
         )
         return response

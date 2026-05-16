@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = []
@@ -24,11 +23,14 @@ class Migration(migrations.Migration):
                 ("avatar_url", models.URLField(blank=True, null=True)),
                 ("is_active", models.BooleanField(default=True)),
                 ("is_staff", models.BooleanField(default=False)),
-                ("role", models.CharField(
-                    choices=[("ROLE_USER", "User"), ("ROLE_ADMIN", "Admin")],
-                    default="ROLE_USER",
-                    max_length=20,
-                )),
+                (
+                    "role",
+                    models.CharField(
+                        choices=[("ROLE_USER", "User"), ("ROLE_ADMIN", "Admin")],
+                        default="ROLE_USER",
+                        max_length=20,
+                    ),
+                ),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
             ],
             options={"db_table": "users"},
@@ -38,26 +40,35 @@ class Migration(migrations.Migration):
             fields=[
                 ("id", models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)),
                 ("content", models.CharField(max_length=280)),
-                ("status", models.CharField(
-                    choices=[("DRAFT", "Draft"), ("PUBLISHED", "Published"), ("DELETED", "Deleted")],
-                    default="PUBLISHED",
-                    max_length=20,
-                )),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[("DRAFT", "Draft"), ("PUBLISHED", "Published"), ("DELETED", "Deleted")],
+                        default="PUBLISHED",
+                        max_length=20,
+                    ),
+                ),
                 ("like_count", models.PositiveIntegerField(default=0)),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 ("updated_at", models.DateTimeField(auto_now=True)),
-                ("author", models.ForeignKey(
-                    on_delete=django.db.models.deletion.CASCADE,
-                    related_name="posts",
-                    to="database.userorm",
-                )),
-                ("parent", models.ForeignKey(
-                    blank=True,
-                    null=True,
-                    on_delete=django.db.models.deletion.SET_NULL,
-                    related_name="replies",
-                    to="database.postorm",
-                )),
+                (
+                    "author",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="posts",
+                        to="database.userorm",
+                    ),
+                ),
+                (
+                    "parent",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="replies",
+                        to="database.postorm",
+                    ),
+                ),
             ],
             options={"db_table": "posts"},
         ),
@@ -66,16 +77,22 @@ class Migration(migrations.Migration):
             fields=[
                 ("id", models.BigAutoField(auto_created=True, primary_key=True)),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
-                ("follower", models.ForeignKey(
-                    on_delete=django.db.models.deletion.CASCADE,
-                    related_name="following_set",
-                    to="database.userorm",
-                )),
-                ("following", models.ForeignKey(
-                    on_delete=django.db.models.deletion.CASCADE,
-                    related_name="follower_set",
-                    to="database.userorm",
-                )),
+                (
+                    "follower",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="following_set",
+                        to="database.userorm",
+                    ),
+                ),
+                (
+                    "following",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="follower_set",
+                        to="database.userorm",
+                    ),
+                ),
             ],
             options={"db_table": "follows"},
         ),
@@ -84,16 +101,22 @@ class Migration(migrations.Migration):
             fields=[
                 ("id", models.BigAutoField(auto_created=True, primary_key=True)),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
-                ("post", models.ForeignKey(
-                    on_delete=django.db.models.deletion.CASCADE,
-                    related_name="likes",
-                    to="database.postorm",
-                )),
-                ("user", models.ForeignKey(
-                    on_delete=django.db.models.deletion.CASCADE,
-                    related_name="likes",
-                    to="database.userorm",
-                )),
+                (
+                    "post",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="likes",
+                        to="database.postorm",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="likes",
+                        to="database.userorm",
+                    ),
+                ),
             ],
             options={"db_table": "likes"},
         ),

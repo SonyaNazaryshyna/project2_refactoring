@@ -9,6 +9,7 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 
+
 class RegisterRequest(BaseModel):
     username: str = Field(..., min_length=3, max_length=30, pattern=r"^[a-zA-Z0-9_]+$")
     email: EmailStr
@@ -28,6 +29,7 @@ class TokenResponse(BaseModel):
 
 
 # ── User ──────────────────────────────────────────────────────────────────────
+
 
 class UserResponse(BaseModel):
     id: UUID
@@ -49,6 +51,7 @@ class UpdateProfileRequest(BaseModel):
 
 
 # ── Post ──────────────────────────────────────────────────────────────────────
+
 
 class CreatePostRequest(BaseModel):
     content: str = Field(..., min_length=1, max_length=280)
@@ -76,6 +79,7 @@ class EditPostRequest(BaseModel):
 
 
 # ── Pagination ─────────────────────────────────────────────────────────────────
+
 
 class PaginatedResponse(BaseModel):
     items: list

@@ -1,5 +1,6 @@
 """Auth REST controllers."""
 import importlib
+
 _jwt = importlib.import_module("jwt")
 
 from rest_framework.decorators import api_view, permission_classes
