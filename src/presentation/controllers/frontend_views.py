@@ -23,6 +23,9 @@ from src.infrastructure.external.notification import CeleryNotificationSender
 from django.conf import settings
 
 ADMIN_PANEL_URL = "/admin-panel"
+AUTH_LOGIN_HTML = "auth/login.html"
+AUTH_REGISTER_HTML = "auth/register.html"
+LOGIN = "/login"
 
 def _get_jwt():
     cfg = JWTConfig(
@@ -114,10 +117,10 @@ def login_view(request):
             resp.set_cookie("access_token", tokens.access_token, httponly=False, samesite="Lax", max_age=3600)
             return resp
         except AuthenticationError as e:
-            return render(request, "auth/login.html", {"error": str(e)})
+            return render(request, AUTH_LOGIN_HTML, {"error": str(e)})
         except Exception:
-            return render(request, "auth/login.html", {"error": "Невірний email або пароль"})
-    return render(request, "auth/login.html")
+            return render(request, AUTH_LOGIN_HTML, {"error": "Невірний email або пароль"})
+    return render(request, AUTH_LOGIN_HTML)
 
 
 @csrf_protect
@@ -144,13 +147,13 @@ def register_view(request):
             resp.set_cookie("access_token", tokens.access_token, httponly=False, samesite="Lax", max_age=3600)
             return resp
         except ConflictError as e:
-            return render(request, "auth/register.html", {"error": str(e)})
+            return render(request, AUTH_REGISTER_HTML, {"error": str(e)})
         except Exception as e:
-            return render(request, "auth/register.html", {"error": str(e)})
-    return render(request, "auth/register.html")
+            return render(request, AUTH_REGISTER_HTML, {"error": str(e)})
+    return render(request, AUTH_REGISTER_HTML)
 
 def logout_view(request):
-    resp = redirect("/login")
+    resp = redirect(LOGIN)
     resp.delete_cookie("access_token")
     return resp
 
@@ -161,7 +164,7 @@ def logout_view(request):
 def feed_view(request):
     user = _me(request)
     if not user:
-        return redirect("/login")
+        return redirect(LOGIN)
     # Personal feed: posts from followed users
     following_ids = FollowORM.objects.filter(follower_id=user["id"]).values_list("following_id", flat=True)
     qs = (
@@ -184,7 +187,7 @@ def feed_view(request):
 def explore_view(request):
     user = _me(request)
     if not user:
-        return redirect("/login")
+        return redirect(LOGIN)
     # ALL posts from everyone
     qs = PostORM.objects.filter(status="PUBLISHED").select_related("author").order_by("-created_at")[:50]
     posts = _posts_to_list(qs, user["id"])
@@ -205,7 +208,7 @@ def explore_view(request):
 def search_view(request):
     user = _me(request)
     if not user:
-        return redirect("/login")
+        return redirect(LOGIN)
     query = request.GET.get("q", "").strip()
     users = []
     if query:
@@ -238,14 +241,14 @@ def search_view(request):
 def my_profile_view(request):
     user = _me(request)
     if not user:
-        return redirect("/login")
+        return redirect(LOGIN)
     return redirect(f"/user/{user['username']}")
 
 
 def user_profile_view(request, username):
     current_user = _me(request)
     if not current_user:
-        return redirect("/login")
+        return redirect(LOGIN)
     try:
         profile_orm = UserORM.objects.get(username=username)
     except UserORM.DoesNotExist:
@@ -287,7 +290,7 @@ def user_profile_view(request, username):
 def update_profile_view(request, username):
     current_user = _me(request)
     if not current_user or current_user["username"] != username:
-        return redirect("/login")
+        return redirect(LOGIN)
     if request.method == "POST":
         try:
             user_orm = UserORM.objects.get(id=current_user["id"])
@@ -314,7 +317,7 @@ def update_profile_view(request, username):
 def followers_view(request, username):
     user = _me(request)
     if not user:
-        return redirect("/login")
+        return redirect(LOGIN)
     try:
         profile_orm = UserORM.objects.get(username=username)
     except UserORM.DoesNotExist:
@@ -345,7 +348,7 @@ def followers_view(request, username):
 def following_view(request, username):
     user = _me(request)
     if not user:
-        return redirect("/login")
+        return redirect(LOGIN)
     try:
         profile_orm = UserORM.objects.get(username=username)
     except UserORM.DoesNotExist:

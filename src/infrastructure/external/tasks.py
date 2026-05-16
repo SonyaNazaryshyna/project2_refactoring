@@ -21,7 +21,7 @@ def send_welcome_email(self, user_id: str, username: str, email: str):
         # )
         logger.info(f"Welcome email sent to {email}")
     except Exception as exc:
-        logger.error(f"Failed to send welcome email: {exc}")
+        logger.exception(f"Failed to send welcome email: {exc}")
         raise self.retry(exc=exc)
 
 

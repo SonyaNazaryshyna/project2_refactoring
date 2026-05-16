@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from src.domain.exceptions import DomainException
 
-_USERNAME_RE = re.compile(r"^[a-zA-Z0-9_]{3,30}$")
+_USERNAME_RE = re.compile(r"^\w{3,30}$")
 
 
 @dataclass(frozen=True)

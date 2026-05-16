@@ -10,10 +10,6 @@ from src.domain.exceptions import DomainException
 from src.domain.value_objects.email import Email
 from src.domain.value_objects.username import Username
 
-if TYPE_CHECKING:
-    pass
-
-
 @dataclass
 class User:
     """Rich domain entity for a microblog user."""
