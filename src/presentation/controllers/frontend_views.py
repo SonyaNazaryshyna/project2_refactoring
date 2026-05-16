@@ -3,13 +3,10 @@
 from __future__ import annotations
 import base64
 from django.shortcuts import render, redirect
-from django.views.decorators.csrf import csrf_exempt
 
 from src.infrastructure.database.models import UserORM, PostORM, LikeORM, FollowORM
 from src.infrastructure.database.repositories import (
     DjangoUserRepository,
-    DjangoPostRepository,
-    DjangoFollowRepository,
     DjangoLikeRepository,
 )
 from src.infrastructure.security.jwt_provider import JWTProvider, JWTConfig

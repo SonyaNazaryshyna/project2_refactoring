@@ -7,7 +7,7 @@ from rest_framework import status
 
 from src.application.dtos import CreatePostRequest, EditPostRequest
 from src.presentation.config.container import get_post_service
-from src.infrastructure.database.models import PostORM, UserORM
+from src.infrastructure.database.models import PostORM
 from src.infrastructure.database.repositories import DjangoLikeRepository
 
 
