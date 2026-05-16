@@ -1,38 +1,17 @@
-"""Integration tests — make_admin management command."""
-import pytest
-from io import StringIO
-from django.core.management import call_command
+from django.core.management.base import BaseCommand
 from src.infrastructure.database.models import UserORM
 
 
-def create_user(username, email, role="ROLE_USER"):
-    return UserORM.objects.create(
-        username=username,
-        email=email,
-        password="hashed",
-        is_active=True,
-        role=role,
-    )
+class Command(BaseCommand):
+    help = "Promote a user to ROLE_ADMIN"
 
+    def add_arguments(self, parser):
+        parser.add_argument("username", type=str)
 
-@pytest.mark.django_db
-class TestMakeAdminCommand:
-    def test_promote_existing_user(self):
-        create_user("testuser", "test@test.com")
-        out = StringIO()
-        call_command("make_admin", "testuser", stdout=out)
-        user = UserORM.objects.get(username="testuser")
-        assert user.role == "ROLE_ADMIN"
-        assert "ROLE_ADMIN" in out.getvalue()
-
-    def test_promote_nonexistent_user(self):
-        out = StringIO()
-        call_command("make_admin", "ghost", stdout=out)
-        assert "not found" in out.getvalue()
-
-    def test_promote_already_admin(self):
-        create_user("adminuser", "admin@test.com", role="ROLE_ADMIN")
-        out = StringIO()
-        call_command("make_admin", "adminuser", stdout=out)
-        user = UserORM.objects.get(username="adminuser")
-        assert user.role == "ROLE_ADMIN"
+    def handle(self, *args, **options):
+        username = options["username"]
+        updated = UserORM.objects.filter(username=username).update(role="ROLE_ADMIN")
+        if updated:
+            self.stdout.write(self.style.SUCCESS(f"✅ @{username} is now ROLE_ADMIN"))
+        else:
+            self.stdout.write(self.style.ERROR(f"❌ User '{username}' not found"))
