@@ -12,7 +12,7 @@ from src.domain.exceptions import DomainException
 from src.domain.ports import PostRepository, LikeRepository, UserRepository
 from src.domain.value_objects.email import Email
 from src.domain.value_objects.username import Username
-from datetime import datetime
+import datetime
 
 
 def make_user(username="testuser", email="test@example.com"):
@@ -24,7 +24,7 @@ def make_user(username="testuser", email="test@example.com"):
         bio="",
         avatar_url=None,
         is_active=True,
-        created_at=datetime.utcnow(),
+        created_at=datetime.datetime.now(datetime.UTC),
     )
 
 
@@ -44,7 +44,7 @@ class TestPostService:
 
     def test_create_post_saves_and_returns_response(self):
         user = make_user()
-        post = make_post(author_id=user.id)
+        post = make_post(author_id=user.id, content="Hello!") 
         self.mock_posts.save.return_value = post
         self.mock_users.find_by_id.return_value = user
 
@@ -128,7 +128,7 @@ class TestAuthService:
         self.mock_users.exists_by_email.return_value = True
 
         with pytest.raises(ConflictError):
-            self.svc.register(RegisterRequest(username="u", email="taken@test.com", password="pass12345"))
+            self.svc.register(RegisterRequest(username="existinguser", email="taken@test.com", password="pass12345"))
 
     def test_login_wrong_password_raises_auth_error(self):
         user = make_user()

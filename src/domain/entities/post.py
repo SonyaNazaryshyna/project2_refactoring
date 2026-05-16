@@ -1,7 +1,7 @@
 """Post domain entity — Rich Domain Model."""
 from __future__ import annotations
 from dataclasses import dataclass
-from datetime import datetime
+import datetime
 from enum import Enum
 from typing import Optional
 from uuid import UUID, uuid4
@@ -24,8 +24,8 @@ class Post:
     content: str
     status: PostStatus
     like_count: int
-    created_at: datetime
-    updated_at: datetime
+    created_at: datetime.datetime
+    updated_at: datetime.datetime
     parent_id: Optional[UUID] = None  # for replies
 
     MAX_CONTENT_LENGTH = 280
@@ -34,7 +34,7 @@ class Post:
     def create(cls, author_id: UUID, content: str, parent_id: Optional[UUID] = None) -> "Post":
         """Factory method — validates and creates a new post."""
         cls._validate_content(content)
-        now = datetime.utcnow()
+        now = datetime.datetime.now(datetime.UTC)
         return cls(
             id=uuid4(),
             author_id=author_id,
