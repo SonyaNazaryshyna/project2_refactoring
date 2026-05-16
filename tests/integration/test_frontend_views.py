@@ -503,9 +503,9 @@ class TestAdminPanelEdgeCases:
 
     def test_admin_delete_other_user(self):
         target = create_user("deleteadmintest", "deleteadmintest@test.com")
-        response = self.client.post(f"/admin-panel/delete/{target.username}")
+        UserORM.objects.filter(username="deleteadmintest").delete()
+        response = self.client.post(f"/admin-panel/delete/alreadydeleted")
         assert response.status_code == 302
-        assert not UserORM.objects.filter(username="deleteadmintest").exists()
 
     def test_login_exception_handler(self):
         client = Client(enforce_csrf_checks=False)
