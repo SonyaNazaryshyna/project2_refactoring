@@ -375,3 +375,142 @@ class TestAdminViews:
         response = self.client.post(f"/admin-panel/delete/{self.admin.username}")
         assert response.status_code == 302
         assert UserORM.objects.filter(username="adminuser").exists()
+        
+
+@pytest.mark.django_db
+class TestFeedWithPosts:
+    def setup_method(self):
+        self.client = Client(enforce_csrf_checks=False)
+        self.user = create_user("feedpostuser", "feedpost@test.com")
+        self.token = make_jwt_token(self.user.id, self.user.username)
+        self.client.cookies["access_token"] = self.token
+
+    def test_feed_with_posts(self):
+        from src.infrastructure.database.models import PostORM, FollowORM
+        author = create_user("feedauthor", "feedauthor@test.com")
+        FollowORM.objects.create(follower=self.user, following=author)
+        PostORM.objects.create(author=author, content="Feed post", status="PUBLISHED", like_count=0)
+        response = self.client.get("/")
+        assert response.status_code == 200
+
+    def test_explore_with_posts(self):
+        from src.infrastructure.database.models import PostORM
+        PostORM.objects.create(author=self.user, content="Explore post", status="PUBLISHED", like_count=0)
+        response = self.client.get("/explore")
+        assert response.status_code == 200
+
+    def test_search_finds_users(self):
+        create_user("searchable", "searchable@test.com")
+        response = self.client.get("/search?q=searchable")
+        assert response.status_code == 200
+
+    def test_profile_view_other_user(self):
+        other = create_user("otherprofile", "other@test.com")
+        response = self.client.get(f"/user/{other.username}")
+        assert response.status_code == 200
+
+    def test_profile_view_is_following(self):
+        from src.infrastructure.database.models import FollowORM
+        other = create_user("followed", "followed@test.com")
+        FollowORM.objects.create(follower=self.user, following=other)
+        response = self.client.get(f"/user/{other.username}")
+        assert response.status_code == 200
+
+    def test_profile_with_posts(self):
+        from src.infrastructure.database.models import PostORM
+        PostORM.objects.create(author=self.user, content="My post", status="PUBLISHED", like_count=0)
+        response = self.client.get(f"/user/{self.user.username}")
+        assert response.status_code == 200
+
+
+@pytest.mark.django_db
+class TestUpdateProfileEdgeCases:
+    def setup_method(self):
+        self.client = Client(enforce_csrf_checks=False)
+        self.user = create_user("updateuser", "update@test.com")
+        self.token = make_jwt_token(self.user.id, self.user.username)
+        self.client.cookies["access_token"] = self.token
+
+    def test_update_profile_username_taken(self):
+        create_user("takenuser", "taken@test.com")
+        response = self.client.post(f"/user/{self.user.username}/edit", {
+            "username": "takenuser",
+            "bio": "bio",
+        })
+        assert response.status_code == 302
+        assert "username_taken" in response.url
+
+    def test_update_profile_change_username(self):
+        response = self.client.post(f"/user/{self.user.username}/edit", {
+            "username": "newupdateusername",
+            "bio": "bio",
+        })
+        assert response.status_code == 302
+
+    def test_update_profile_wrong_user(self):
+        other = create_user("otherupdate", "otherupdate@test.com")
+        response = self.client.post(f"/user/{other.username}/edit", {
+            "username": other.username,
+            "bio": "hacked",
+        })
+        assert response.status_code == 302
+
+
+@pytest.mark.django_db
+class TestAdminPanelEdgeCases:
+    def setup_method(self):
+        self.client = Client(enforce_csrf_checks=False)
+        self.admin = create_user("adminedge", "adminedge@test.com", role="ROLE_ADMIN")
+        self.token = make_jwt_token(self.admin.id, self.admin.username, is_admin=True)
+        self.client.cookies["access_token"] = self.token
+
+    def test_admin_panel_with_query(self):
+        create_user("queryuser", "query@test.com")
+        response = self.client.get("/admin-panel?q=query")
+        assert response.status_code == 200
+
+    def test_admin_panel_with_posts(self):
+        from src.infrastructure.database.models import PostORM
+        PostORM.objects.create(
+            author=self.admin, content="Admin post", status="PUBLISHED", like_count=0
+        )
+        response = self.client.get("/admin-panel")
+        assert response.status_code == 200
+
+    def test_admin_ban_non_admin_redirects(self):
+        client = Client(enforce_csrf_checks=False)
+        user = create_user("regularban", "regularban@test.com")
+        token = make_jwt_token(user.id, user.username)
+        client.cookies["access_token"] = token
+        response = client.post("/admin-panel/ban/someuser")
+        assert response.status_code == 302
+
+    def test_admin_unban_non_admin_redirects(self):
+        client = Client(enforce_csrf_checks=False)
+        user = create_user("regularunban", "regularunban@test.com")
+        token = make_jwt_token(user.id, user.username)
+        client.cookies["access_token"] = token
+        response = client.post("/admin-panel/unban/someuser")
+        assert response.status_code == 302
+
+    def test_admin_delete_non_admin_redirects(self):
+        client = Client(enforce_csrf_checks=False)
+        user = create_user("regulardelete", "regulardelete@test.com")
+        token = make_jwt_token(user.id, user.username)
+        client.cookies["access_token"] = token
+        response = client.post("/admin-panel/delete/someuser")
+        assert response.status_code == 302
+
+    def test_admin_delete_other_user(self):
+        target = create_user("deleteadmintest", "deleteadmintest@test.com")
+        response = self.client.post(f"/admin-panel/delete/{target.username}")
+        assert response.status_code == 302
+        assert not UserORM.objects.filter(username="deleteadmintest").exists()
+
+    def test_login_exception_handler(self):
+        client = Client(enforce_csrf_checks=False)
+        response = client.post("/login", {
+            "email": "notexist@test.com",
+            "password": "wrongpass",
+        })
+        assert response.status_code == 200

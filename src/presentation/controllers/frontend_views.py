@@ -460,3 +460,4 @@ def admin_delete_view(request, username):
     if username != user["username"]:
         UserORM.objects.filter(username=username).delete()
     return redirect(ADMIN_PANEL_URL)
+
