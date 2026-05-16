@@ -3,6 +3,8 @@
 from __future__ import annotations
 import base64
 from django.shortcuts import render, redirect
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_protect
 
 from src.infrastructure.database.models import UserORM, PostORM, LikeORM, FollowORM
 from src.infrastructure.database.repositories import (
@@ -89,6 +91,7 @@ def _posts_to_list(qs, viewer_id):
 # ── Auth ───────────────────────────────────────────────────────────────────────
 
 
+@csrf_protect
 def login_view(request):
     if _token(request):
         return redirect("/")
@@ -107,13 +110,7 @@ def login_view(request):
                 )
             )
             resp = redirect("/")
-            resp.set_cookie(
-                "access_token",
-                tokens.access_token,
-                httponly=False,
-                samesite="Lax",
-                max_age=3600,
-            )
+            resp.set_cookie("access_token", tokens.access_token, httponly=False, samesite="Lax", max_age=3600)
             return resp
         except AuthenticationError as e:
             return render(request, "auth/login.html", {"error": str(e)})
@@ -122,6 +119,7 @@ def login_view(request):
     return render(request, "auth/login.html")
 
 
+@csrf_protect
 def register_view(request):
     if _token(request):
         return redirect("/")
@@ -142,20 +140,13 @@ def register_view(request):
                 )
             )
             resp = redirect("/")
-            resp.set_cookie(
-                "access_token",
-                tokens.access_token,
-                httponly=False,
-                samesite="Lax",
-                max_age=3600,
-            )
+            resp.set_cookie("access_token", tokens.access_token, httponly=False, samesite="Lax", max_age=3600)
             return resp
         except ConflictError as e:
             return render(request, "auth/register.html", {"error": str(e)})
         except Exception as e:
             return render(request, "auth/register.html", {"error": str(e)})
     return render(request, "auth/register.html")
-
 
 def logout_view(request):
     resp = redirect("/login")
@@ -291,8 +282,8 @@ def user_profile_view(request, username):
     )
 
 
+@csrf_protect
 def update_profile_view(request, username):
-    """Handle profile update including avatar image upload."""
     current_user = _me(request)
     if not current_user or current_user["username"] != username:
         return redirect("/login")
@@ -302,7 +293,6 @@ def update_profile_view(request, username):
             new_username = request.POST.get("username", "").strip()
             bio = request.POST.get("bio", "").strip()
             avatar_file = request.FILES.get("avatar")
-
             if new_username and new_username != user_orm.username:
                 if UserORM.objects.filter(username=new_username).exists():
                     return redirect(f"/user/{username}?error=username_taken")
@@ -310,18 +300,15 @@ def update_profile_view(request, username):
             if bio is not None:
                 user_orm.bio = bio
             if avatar_file:
-                # Save as base64 data URL
                 content = avatar_file.read()
                 mime = avatar_file.content_type or "image/jpeg"
                 b64 = base64.b64encode(content).decode()
                 user_orm.avatar_url = f"data:{mime};base64,{b64}"
             user_orm.save()
-            new_uname = user_orm.username
-            return redirect(f"/user/{new_uname}")
+            return redirect(f"/user/{user_orm.username}")
         except Exception:
             return redirect(f"/user/{username}")
     return redirect(f"/user/{username}")
-
 
 def followers_view(request, username):
     user = _me(request)
@@ -428,28 +415,32 @@ def admin_panel_view(request):
     )
 
 
+@require_http_methods(["POST"])
+@csrf_protect
 def admin_ban_view(request, username):
     user = _me(request)
     if not user or not user.get("is_admin"):
         return redirect("/")
-    if request.method == "POST":
-        UserORM.objects.filter(username=username).update(is_active=False)
+    UserORM.objects.filter(username=username).update(is_active=False)
     return redirect("/admin-panel")
 
 
+@require_http_methods(["POST"])
+@csrf_protect
 def admin_unban_view(request, username):
     user = _me(request)
     if not user or not user.get("is_admin"):
         return redirect("/")
-    if request.method == "POST":
-        UserORM.objects.filter(username=username).update(is_active=True)
+    UserORM.objects.filter(username=username).update(is_active=True)
     return redirect("/admin-panel")
 
 
+@require_http_methods(["POST"])
+@csrf_protect
 def admin_delete_view(request, username):
     user = _me(request)
     if not user or not user.get("is_admin"):
         return redirect("/")
-    if request.method == "POST" and username != user["username"]:
+    if username != user["username"]:
         UserORM.objects.filter(username=username).delete()
     return redirect("/admin-panel")
