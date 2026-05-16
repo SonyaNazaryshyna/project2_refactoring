@@ -2,7 +2,6 @@
 import pytest
 from uuid import uuid4
 from src.domain.entities.post import Post, PostStatus
-from src.domain.entities.user import User
 from src.domain.value_objects.email import Email
 from src.domain.value_objects.username import Username
 from src.domain.exceptions import DomainException

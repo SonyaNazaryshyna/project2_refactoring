@@ -3,7 +3,7 @@ from __future__ import annotations
 from uuid import UUID
 
 from src.application.dtos import UserResponse, UpdateProfileRequest, PaginatedResponse
-from src.application.services.post_service import NotFoundError, ForbiddenError
+from src.application.services.post_service import NotFoundError
 from src.domain.exceptions import DomainException
 from src.domain.ports import UserRepository, FollowRepository, NotificationSender
 

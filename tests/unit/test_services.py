@@ -1,12 +1,12 @@
 """Unit tests for application services with mocked repositories."""
 import pytest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 from uuid import uuid4
 
-from src.application.dtos import CreatePostRequest, EditPostRequest, RegisterRequest, LoginRequest
+from src.application.dtos import CreatePostRequest, RegisterRequest, LoginRequest
 from src.application.services.post_service import PostService, ForbiddenError, NotFoundError
 from src.application.services.auth_service import AuthService, AuthenticationError, ConflictError
-from src.domain.entities.post import Post, PostStatus
+from src.domain.entities.post import Post
 from src.domain.entities.user import User
 from src.domain.exceptions import DomainException
 from src.domain.ports import PostRepository, LikeRepository, UserRepository
@@ -119,7 +119,7 @@ class TestAuthService:
         self.mock_users.save.return_value = make_user()
         self.mock_jwt.create_tokens.return_value = Mock(access_token="acc", refresh_token="ref")
 
-        result = self.svc.register(RegisterRequest(username="newuser", email="new@test.com", password="password123"))
+        self.svc.register(RegisterRequest(username="newuser", email="new@test.com", password="password123"))
 
         self.mock_users.save.assert_called_once()
         self.mock_notify.send_welcome.assert_called_once()

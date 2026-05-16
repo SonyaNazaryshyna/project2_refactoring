@@ -33,8 +33,6 @@ def post_detail(request, post_id: str):
     pid = UUID(post_id)
 
     if request.method == "GET":
-        from src.application.services.post_service import NotFoundError
-
         post = svc._get_or_raise(pid)
         from src.infrastructure.database.repositories import DjangoUserRepository, DjangoLikeRepository
 

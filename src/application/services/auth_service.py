@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from src.application.dtos import LoginRequest, RegisterRequest, TokenResponse
 from src.domain.entities.user import User
-from src.domain.exceptions import DomainException
 from src.domain.ports import UserRepository, NotificationSender
 from src.infrastructure.security.password import PasswordEncoder
 from src.infrastructure.security.jwt_provider import JWTProvider
