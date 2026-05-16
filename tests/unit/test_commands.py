@@ -7,7 +7,6 @@ from src.infrastructure.database.models import UserORM
 class TestPromoteAdminCommand:
     
     def test_promote_user_to_admin_success(self):
-        """Перевірка успішного підвищення ролі існуючого користувача"""
         username = "test_user"
         UserORM.objects.create(username=username, role="ROLE_USER")
         
@@ -20,7 +19,6 @@ class TestPromoteAdminCommand:
         assert user.role == "ROLE_ADMIN"
 
     def test_promote_user_not_found(self):
-        """Перевірка поведінки, коли користувача не існує"""
         out = StringIO()
         username = "non_existent_user"
         
@@ -29,7 +27,6 @@ class TestPromoteAdminCommand:
         assert f"User '{username}' not found" in out.getvalue()
 
     def test_promote_already_admin(self):
-        """Перевірка, що команда працює коректно, якщо юзер вже адмін"""
         username = "already_admin"
         UserORM.objects.create(username=username, role="ROLE_ADMIN")
         
