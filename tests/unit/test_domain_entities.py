@@ -1,6 +1,6 @@
 """Unit tests — Domain Entities."""
 import pytest
-import datetime
+from datetime import datetime
 from uuid import uuid4
 
 from src.domain.entities.post import Post, PostStatus
