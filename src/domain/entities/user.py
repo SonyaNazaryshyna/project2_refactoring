@@ -1,7 +1,7 @@
 """User domain entity — Rich Domain Model (not anemic)."""
 from __future__ import annotations
 from dataclasses import dataclass, field
-from datetime import datetime
+import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
@@ -24,7 +24,7 @@ class User:
     bio: str
     avatar_url: str | None
     is_active: bool
-    created_at: datetime
+    created_at: datetime.datetime
     _follower_count: int = field(default=0, repr=False)
     _following_count: int = field(default=0, repr=False)
 
@@ -39,7 +39,7 @@ class User:
             bio=bio,
             avatar_url=None,
             is_active=True,
-            created_at=datetime.utcnow(),
+            created_at=datetime.datetime.now(datetime.UTC),
         )
 
     def deactivate(self) -> None:

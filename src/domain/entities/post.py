@@ -59,14 +59,14 @@ class Post:
             raise DomainException("Only published posts can be edited.")
         self._validate_content(new_content)
         self.content = new_content
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.datetime.now(datetime.UTC)
 
     def delete(self) -> None:
         """Soft delete — business logic lives here, not in the service."""
         if self.status == PostStatus.DELETED:
             raise DomainException("Post is already deleted.")
         self.status = PostStatus.DELETED
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.datetime.now(datetime.UTC)
 
     def increment_likes(self) -> None:
         if self.status != PostStatus.PUBLISHED:
