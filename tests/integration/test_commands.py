@@ -11,7 +11,7 @@ class TestPromoteAdminCommand:
         UserORM.objects.create(username=username, role="ROLE_USER")
         
         out = StringIO()
-        call_command("promote_admin", username, stdout=out)
+        call_command("make_admin", "testuser", stdout=out)
         
         assert f"@{username} is now ROLE_ADMIN" in out.getvalue()
         
@@ -22,7 +22,7 @@ class TestPromoteAdminCommand:
         out = StringIO()
         username = "non_existent_user"
         
-        call_command("promote_admin", username, stdout=out)
+        call_command("make_admin", "testuser", stdout=out)
         
         assert f"User '{username}' not found" in out.getvalue()
 
@@ -31,7 +31,7 @@ class TestPromoteAdminCommand:
         UserORM.objects.create(username=username, role="ROLE_ADMIN")
         
         out = StringIO()
-        call_command("promote_admin", username, stdout=out)
+        call_command("make_admin", "testuser", stdout=out)
         
         assert f"@{username} is now ROLE_ADMIN" in out.getvalue()
         user = UserORM.objects.get(username=username)
