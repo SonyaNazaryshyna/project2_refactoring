@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from dataclasses import dataclass, field
-from datetime import datetime
+import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
@@ -40,7 +40,7 @@ class User:
             bio=bio,
             avatar_url=None,
             is_active=True,
-            created_at=datetime.utcnow(),
+            created_at=datetime.datetime.now(datetime.UTC)
         )
 
     def deactivate(self) -> None:

@@ -37,7 +37,7 @@ class UserResponse(BaseModel):
     username: str
     email: str
     bio: str
-    avatar_url: Optional[str]
+    avatar_url: Optional[str] = None
     is_active: bool
     follower_count: int
     following_count: int
@@ -68,7 +68,7 @@ class PostResponse(BaseModel):
     like_count: int
     is_liked_by_me: bool = False
     is_reply: bool
-    parent_id: Optional[UUID]
+    parent_id: Optional[UUID] = None
     created_at: datetime
     updated_at: datetime
 
