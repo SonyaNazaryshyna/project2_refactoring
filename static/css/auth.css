@@ -1,0 +1,19 @@
+.auth-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; position: relative; }
+.auth-bg { position: absolute; inset: 0; pointer-events: none; }
+.blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: .28; }
+.b1 { width: 400px; height: 400px; background: radial-gradient(circle, #e8b86d, transparent 70%); top: -100px; left: -100px; animation: drift 8s ease-in-out infinite alternate; }
+.b2 { width: 350px; height: 350px; background: radial-gradient(circle, #7b6ef6, transparent 70%); bottom: -70px; right: -70px; animation: drift 10s ease-in-out infinite alternate-reverse; }
+.b3 { width: 250px; height: 250px; background: radial-gradient(circle, #e05c5c, transparent 70%); top: 50%; left: 50%; transform: translate(-50%,-50%); animation: drift 12s ease-in-out infinite alternate; }
+@keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(20px,12px) scale(1.07); } }
+.auth-wrap { position: relative; z-index: 1; width: 100%; max-width: 380px; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 22px; animation: fadeUp .5s ease both; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.auth-brand { text-align: center; }
+.brand-lg { width: 52px; height: 52px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); border-radius: 15px; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 900; color: var(--ink); margin: 0 auto 12px; box-shadow: 0 8px 24px rgba(232,184,109,.4); }
+.auth-brand h1 { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; letter-spacing: -.02em; }
+.auth-brand p { color: var(--muted-2); font-size: .84rem; margin-top: 4px; }
+.auth-card { background: var(--ink-2); border: 1px solid var(--ink-4); border-radius: 16px; padding: 24px; width: 100%; box-shadow: var(--shadow); }
+.auth-tabs { display: flex; gap: 4px; background: var(--ink-3); border-radius: var(--rs); padding: 4px; margin-bottom: 20px; }
+.tab { flex: 1; padding: 8px; border-radius: 6px; text-align: center; color: var(--muted-2); font-size: .84rem; font-weight: 500; transition: var(--tr); }
+.tab.active { background: var(--ink-4); color: var(--paper); }
+.tab:hover:not(.active) { color: var(--paper); }
+.auth-form { display: flex; flex-direction: column; gap: 13px; }

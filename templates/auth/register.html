@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Реєстрація — Мікроблог</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/static/css/base.css"/>
+  <link rel="stylesheet" href="/static/css/auth.css"/>
+</head>
+<body class="auth-page">
+<div class="auth-bg"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+<div class="auth-wrap">
+  <div class="auth-brand">
+    <div class="brand-lg">М</div>
+    <h1>мікроблог</h1>
+    <p>Думки без меж — 280 символів</p>
+  </div>
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <a href="/login" class="tab">Увійти</a>
+      <a href="/register" class="tab active">Реєстрація</a>
+    </div>
+    {% if error %}<div class="form-error" style="margin-bottom:16px">{{ error }}</div>{% endif %}
+    <form method="POST" action="/register" class="auth-form">
+      {% csrf_token %}
+      <div class="field"><label>Ім'я користувача</label><input type="text" name="username" placeholder="sofia_dev" required minlength="3" maxlength="30"/></div>
+      <div class="field"><label>Email</label><input type="email" name="email" placeholder="you@example.com" required/></div>
+      <div class="field"><label>Пароль</label><input type="password" name="password" placeholder="мінімум 8 символів" required minlength="8"/></div>
+      <div class="field"><label>Про себе <span style="color:var(--muted);font-weight:300;text-transform:none">(необов'язково)</span></label><input type="text" name="bio" placeholder="Хто ти?" maxlength="500"/></div>
+      <button type="submit" class="btn-gold">Створити акаунт</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

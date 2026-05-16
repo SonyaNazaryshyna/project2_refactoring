@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Огляд — Мікроблог{% endblock %}
+{% block nav_explore %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>Огляд</h2>
+</div>
+
+<div class="posts-list">
+  {% if posts %}
+    {% for post in posts %}
+      {% include "partials/post_card.html" %}
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">✨</div>
+      <h3>Поки немає дописів</h3>
+      <p>Будь першим хто опублікує!</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/posts.js"></script>
+{% endblock %}

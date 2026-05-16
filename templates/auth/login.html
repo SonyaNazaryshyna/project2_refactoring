@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Увійти — Мікроблог</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/static/css/base.css"/>
+  <link rel="stylesheet" href="/static/css/auth.css"/>
+</head>
+<body class="auth-page">
+<div class="auth-bg"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+<div class="auth-wrap">
+  <div class="auth-brand">
+    <div class="brand-lg">М</div>
+    <h1>мікроблог</h1>
+    <p>Думки без меж — 280 символів</p>
+  </div>
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <a href="/login" class="tab active">Увійти</a>
+      <a href="/register" class="tab">Реєстрація</a>
+    </div>
+    {% if error %}<div class="form-error" style="margin-bottom:16px">{{ error }}</div>{% endif %}
+    <form method="POST" action="/login" class="auth-form">
+      {% csrf_token %}
+      <div class="field"><label>Email</label><input type="email" name="email" placeholder="you@example.com" required/></div>
+      <div class="field"><label>Пароль</label><input type="password" name="password" placeholder="••••••••" required/></div>
+      <button type="submit" class="btn-gold">Увійти</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

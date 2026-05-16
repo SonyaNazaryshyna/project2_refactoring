@@ -1,0 +1,82 @@
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-microblog}
+      POSTGRES_USER: ${POSTGRES_USER:-microblog}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-microblog_pass}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-microblog}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  web:
+    build: .
+    command: ["sh", "-c", "python manage.py migrate --noinput && gunicorn src.presentation.config.wsgi:application --bind 0.0.0.0:8000 --workers 4 --timeout 120"]
+    ports:
+      - "8000:8000"
+    environment:
+      - DJANGO_SETTINGS_MODULE=src.presentation.config.settings
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=${POSTGRES_DB:-microblog}
+      - POSTGRES_USER=${POSTGRES_USER:-microblog}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-microblog_pass}
+      - REDIS_URL=redis://redis:6379/0
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-change-me-in-production}
+      - JWT_SECRET=${JWT_SECRET:-jwt-secret-dev}
+      - DEBUG=${DEBUG:-False}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  celery_worker:
+    build: .
+    command: celery -A src.infrastructure.external.celery_app worker --loglevel=info --concurrency=4
+    environment:
+      - DJANGO_SETTINGS_MODULE=src.presentation.config.settings
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=${POSTGRES_DB:-microblog}
+      - POSTGRES_USER=${POSTGRES_USER:-microblog}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-microblog_pass}
+      - REDIS_URL=redis://redis:6379/0
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-change-me-in-production}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  flower:
+    build: .
+    command: celery -A src.infrastructure.external.celery_app flower --port=5555
+    ports:
+      - "5555:5555"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - DJANGO_SETTINGS_MODULE=src.presentation.config.settings
+    depends_on:
+      - redis
+      - celery_worker
+
+volumes:
+  postgres_data:

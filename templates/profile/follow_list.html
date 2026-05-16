@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — @{{ username }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <a href="/user/{{ username }}" class="back-btn">
+    <svg viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+  </a>
+  <h2>{{ title }}</h2>
+</div>
+
+<div class="users-list">
+  {% if users %}
+    {% for u in users %}
+    <a href="/user/{{ u.username }}" class="user-row">
+      <div class="ur-avatar">{{ u.username|first|upper }}</div>
+      <div class="ur-info">
+        <div class="ur-name">@{{ u.username }}</div>
+        {% if u.bio %}
+          <div class="ur-bio">{{ u.bio|truncatechars:60 }}</div>
+        {% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">👤</div>
+      <h3>Список порожній</h3>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
