@@ -1,6 +1,5 @@
 """Integration tests — Dependency Injection Container."""
 import pytest
-from unittest.mock import patch
 
 
 @pytest.mark.django_db
