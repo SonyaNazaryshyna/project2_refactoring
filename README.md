@@ -4,8 +4,6 @@
 ![Coverage](https://img.shields.io/badge/coverage-87%25-brightgreen)
 ![Python](https://img.shields.io/badge/python-3.12-blue?logo=python)
 ![Django](https://img.shields.io/badge/django-5.0-green?logo=django)
-![Docker](https://img.shields.io/badge/docker-compose-2496ED?logo=docker)
-![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
 ---
 
