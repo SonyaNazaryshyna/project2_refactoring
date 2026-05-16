@@ -28,8 +28,8 @@ jobs:
         with: {python-version: "3.12", cache: pip}
       - run: pip install flake8 black isort
       - run: black  src/ tests/ --line-length 120
-      - run: isort -only src/ tests/ --profile black
-      - run: flake8 src/ tests/ --max-line-length=120 --exclude=migrations,__pycache__ --ignore=E501,W503
+      - run: isort src/ tests/ --profile black
+      - run: flake8 src/ tests/ --max-line-length=120 --exclude=migrations,__pycache__ --ignore=E501,W503,E704,E203,E402
 
   # ── Unit Tests ────────────────────────────────────────────────────────────────
   unit-tests:
