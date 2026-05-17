@@ -9,589 +9,901 @@
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=SonyaNazaryshyna_project2_refactoring&metric=code_smells&token=fb62d898d5a25df51697f20e08bc3148cbe745a4)](https://sonarcloud.io/summary/new_code?id=SonyaNazaryshyna_project2_refactoring)
 [![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=SonyaNazaryshyna_project2_refactoring&metric=duplicated_lines_density&token=fb62d898d5a25df51697f20e08bc3148cbe745a4)](https://sonarcloud.io/summary/new_code?id=SonyaNazaryshyna_project2_refactoring)
 
-Мінімалістичний мікроблогінговий сервіс побудований на **Clean Architecture**. Користувачі публікують дописи до 280 символів, підписуються один на одного, ставлять лайки та керують профілем. Бізнес-логіка повністю незалежна від фреймворків і покрита тестами на 94%.
-
 ---
 
 ## Зміст
 
-1. [Опис проблеми](#1-опис-проблеми)
-2. [Цільова аудиторія](#2-цільова-аудиторія)
-3. [Нефункціональні вимоги](#3-нефункціональні-вимоги)
-4. [Актори та сценарії використання](#4-актори-та-сценарії-використання)
-5. [UML-моделювання](#5-uml-моделювання)
-6. [Архітектура системи](#6-архітектура-системи)
-7. [Модель даних](#7-модель-даних)
-8. [REST API](#8-rest-api)
-9. [Безпека (JWT)](#9-безпека-jwt)
-10. [Асинхронність (Celery)](#10-асинхронність-celery)
-11. [Тестування](#11-тестування)
-12. [DevOps: Docker Compose та CI/CD](#12-devops-docker-compose-та-cicd)
-13. [Швидкий старт](#13-швидкий-старт)
-14. [Структура проєкту](#14-структура-проєкту)
-15. [Технологічний стек](#15-технологічний-стек)
+1. [Про проєкт](#1-про-проєкт)
+2. [Функціонал](#2-функціонал)
+3. [Технологічний стек](#3-технологічний-стек)
+4. [Архітектура](#4-архітектура)
+5. [Структура проєкту](#5-структура-проєкту)
+6. [Модель даних](#6-модель-даних)
+7. [REST API](#7-rest-api)
+8. [Безпека](#8-безпека)
+9. [Фронтенд](#9-фронтенд)
+10. [Тестування](#10-тестування)
+11. [SonarQube](#11-sonarqube)
+12. [CI/CD](#12-cicd)
+13. [DevOps](#13-devops)
+14. [Швидкий старт](#14-швидкий-старт)
+15. [Змінні середовища](#15-змінні-середовища)
+16. [Корисні команди](#16-корисні-команди)
 
 ---
 
-## 1. Опис проблеми
+## 1. Про проєкт
 
-Сучасні користувачі потребують простого інструменту для обміну короткими думками без перевантаженого інтерфейсу великих соціальних мереж.
+**Whispr** — повноцінний мікроблогінговий сервіс, побудований як демонстрація  розуміння повного циклу розробки програмного забезпечення (SDLC). Проєкт охоплює всі етапи: від проєктування архітектури до розгортання у production.
 
-**Whispr** вирішує цю проблему: надає мінімалістичний, але функціонально повний мікроблогінговий сервіс з публікацією дописів, персональною стрічкою через підписки, лайками та управлінням профілем. Система побудована за принципами **Clean Architecture** — бізнес-логіка незалежна від Django, легко тестується і масштабується.
+### Проблема яку вирішує
 
----
+Сучасні соціальні мережі перевантажені функціоналом. Whispr пропонує мінімалістичний, але повнофункціональний простір для коротких думок — до 280 символів — з можливістю коментувати, лайкати та підписуватись на інших.
 
-## 2. Цільова аудиторія
+### Ключові принципи розробки
 
-| Роль | Опис |
-|---|---|
-| **Гість** | Переглядає публічні профілі та дописи без реєстрації |
-| **ROLE_USER** | Створює дописи, ставить лайки, підписується на інших |
-| **ROLE_ADMIN** | Модерує контент, деактивує акаунти, переглядає статистику |
-
----
-
-## 3. Нефункціональні вимоги
-
-| Категорія | Вимога |
-|---|---|
-| **Продуктивність** | Відповідь API ≤ 200 мс для 95% запитів |
-| **Безпека** | JWT access (60 хв) + refresh (7 днів), паролі через bcrypt |
-| **Масштабованість** | Горизонтальне масштабування через Docker replicas |
-| **Надійність** | Healthcheck на БД, застосунок не стартує до готовності PostgreSQL |
-| **Зручність** | Swagger UI на `/api/docs/`, глобальний JSON-обробник помилок |
-| **Покриття тестами** | ≥ 80% для domain та application шарів (фактично 94%) |
+- **Clean Architecture** — чітке розділення на шари, бізнес-логіка незалежна від фреймворків
+- **Domain-Driven Design (DDD)** — Rich Domain Model замість анемічних моделей
+- **SOLID** — кожен клас має одну відповідальність, залежності направлені всередину
+- **TDD** — тести написані для domain та application шарів з покриттям 94%+
+- **DevOps** — Docker Compose, GitHub Actions CI/CD, SonarQube аналіз якості коду
 
 ---
 
-## 4. Актори та сценарії використання
+## 2. Функціонал
 
-#### UC-01: Реєстрація
-POST /api/v1/auth/register {username, email, password}
-→ Валідація Email і Username Value Objects
-→ bcrypt хешування пароля
-→ Збереження User
-→ Welcome-повідомлення через Celery (async)
-→ Повернення {access_token, refresh_token}
+### Автентифікація
+- Реєстрація нового акаунту з валідацією (username 3-30 символів, валідний email, пароль мінімум 8 символів)
+- Вхід через email + пароль
+- JWT токени (access 60 хв + refresh 7 днів)
+- Автоматичне оновлення токену при зміні профілю
+- Захищений вихід з очищенням cookie
 
-#### UC-02: Публікація допису
-POST /api/v1/posts/create {content ≤ 280 символів}
-→ Post.create() — валідація в доменній сутності
-→ Збереження в БД
-→ Повернення PostResponse
+### Дописи (Posts)
+- Публікація текстових дописів до 280 символів
+- Редагування власних дописів
+- М'яке видалення (статус DELETED, дані зберігаються)
+- Лайки та анлайки з оптимістичним UI оновленням
+- Лічильник лайків в реальному часі
 
-#### UC-03: Персональна стрічка
-GET /api/v1/feed?page=1&size=20
-→ Пости від користувачів, на яких підписаний
-→ Сортування created_at DESC, пагінація
+### Коментарі
+- Відповідь на будь-який допис
+- Перший коментар відображається одразу під дописом
+- Кнопка з кількістю коментарів — натискаєш і розгортаються всі
+- Форма для написання нового коментаря прямо під дописом
+- Коментарі сортуються від найстарішого до найновішого
 
-#### UC-04: Підписка
-POST /api/v1/users/{username}/follow
-→ Перевірка: не на себе, не дублювати
-→ Follow зберігається в БД
-→ Сповіщення цільовому юзеру через Celery (async)
+### Стрічка (Feed)
+- Персональна стрічка — лише дописи користувачів на яких підписаний
+- Розділ "Всі дописи" — дописи від усіх користувачів платформи
+- Сортування за датою (найновіші зверху)
+- Кнопка оновлення стрічки
 
-#### UC-05: Лайк
-POST /api/v1/posts/{id}/like
-→ Перевірка: не лайкати двічі
-→ post.increment_likes() — бізнес-логіка в entity
-→ Like зберігається в таблиці likes
+### Профіль
+- Публічна сторінка профілю з аватаром, ім'ям, біо
+- Всі дописи користувача на його сторінці
+- Лічильники: кількість дописів, підписників, підписок
+- Підписатись / відписатись одним кліком
+- Списки підписників та підписок з переходом на профілі
 
----
+### Редагування профілю
+- Зміна імені користувача (username)
+- Зміна біографії (до 500 символів)
+- Завантаження фото профілю з комп'ютер
+- Попередній перегляд фото перед збереженням
+- Автоматичне оновлення JWT після зміни username
 
-## 5. UML-моделювання
+### Пошук користувачів
+- Пошук за username (часткове співпадіння)
+- Результати відображають аватар, ім'я, біо, кількість підписників
+- Швидкий пошук з правої панелі на будь-якій сторінці
+- Окрема сторінка пошуку `/search`
 
-### Модель домену
-┌──────────────────────────────────────────────────────────────────┐
-│                         DOMAIN MODEL                             │
-│                                                                  │
-│  ┌─────────────────────┐          ┌─────────────────────────┐   │
-│  │        User          │  1 : N   │          Post            │   │
-│  ├─────────────────────┤◄─────────├─────────────────────────┤   │
-│  │ id: UUID             │          │ id: UUID                 │   │
-│  │ username: Username   │          │ author_id: UUID          │   │
-│  │ email: Email         │          │ content: str (≤280)      │   │
-│  │ password_hash: str   │          │ status: PostStatus       │   │
-│  │ bio: str             │          │ like_count: int          │   │
-│  │ avatar_url: str|None │          │ parent_id: UUID|None     │   │
-│  │ is_active: bool      │          │ created_at: datetime     │   │
-│  ├─────────────────────┤          ├─────────────────────────┤   │
-│  │ + create()           │          │ + create()               │   │
-│  │ + deactivate()       │          │ + edit()                 │   │
-│  │ + update_bio()       │          │ + delete()               │   │
-│  └─────────────────────┘          │ + increment_likes()      │   │
-│                                   └─────────────────────────┘   │
-│  VALUE OBJECTS (Immutable):                                      │
-│  ┌──────────────────┐   ┌──────────────────────────────────┐    │
-│  │ Email            │   │ Username                          │    │
-│  │ value: str       │   │ value: str (3–30, \w only)        │    │
-│  └──────────────────┘   └──────────────────────────────────┘    │
-└──────────────────────────────────────────────────────────────────┘
+### Теми оформлення
+- **Темна тема** (за замовчуванням) — темний фон, золоті акценти
+- **Світла тема** — світлий фон, чіткі контури
+- Перемикач у нижній частині бокової панелі
+- Вибрана тема зберігається в localStorage між сесіями
+- Миттєве перемикання без перезавантаження сторінки
 
-### Діаграма класів
-┌──────────────────────────────────────────────────────────────────────────┐
-│                         CLASS DIAGRAM                                    │
-│                                                                          │
-│  DOMAIN                                                                  │
-│  ┌─────────────┐  ┌─────────────┐  ┌──────────────────────────────────┐ │
-│  │   Email VO  │  │ Username VO │  │       DomainException            │ │
-│  └──────┬──────┘  └──────┬──────┘  └──────────────────────────────────┘ │
-│         └────────┬────────┘                                              │
-│  ┌───────────────▼──────────────┐    ┌──────────────────────────────┐   │
-│  │         User entity          │    │         Post entity           │   │
-│  └──────────────────────────────┘    └──────────────────────────────┘   │
-│                                                                          │
-│  PORTS (Abstract Interfaces)                                             │
-│  ┌──────────────────┐  ┌─────────────────┐  ┌──────────────────────┐   │
-│  │ UserRepository   │  │ PostRepository  │  │  FollowRepository    │   │
-│  └────────┬─────────┘  └────────┬────────┘  └──────────┬───────────┘   │
-│           │                     │                        │               │
-│  APPLICATION                    │                        │               │
-│  ┌────────▼──────┐   ┌──────────▼──────┐   ┌───────────▼──────────┐   │
-│  │  AuthService  │   │   PostService   │   │     UserService      │   │
-│  └───────────────┘   └─────────────────┘   └──────────────────────┘   │
-│                                                                          │
-│  INFRASTRUCTURE (Implementations)                                        │
-│  ┌────────────────────┐  ┌─────────────────────┐  ┌─────────────────┐  │
-│  │ DjangoUserRepo     │  │ DjangoPostRepo      │  │  JWTProvider    │  │
-│  └────────────────────┘  └─────────────────────┘  └─────────────────┘  │
-│                                                                          │
-│  PRESENTATION                                                            │
-│  ┌──────────────┐  ┌───────────────┐  ┌──────────────┐                 │
-│  │ auth_views   │  │ post_views    │  │ user_views   │                 │
-│  └──────────────┘  └───────────────┘  └──────────────┘                 │
-└──────────────────────────────────────────────────────────────────────────┘
+### Адмін панель
+- Доступна тільки користувачам з роллю `ROLE_ADMIN`
+- Статистика платформи: кількість користувачів, дописів, лайків, підписок
+- Таблиця всіх користувачів з пошуком
+- Блокування (бан) та розблокування користувачів
+- Видалення акаунтів з підтвердженням
+- Перегляд останніх 10 дописів платформи
 
 ---
 
-## 6. Архітектура системи
+## 3. Технологічний стек
 
-Проєкт реалізовано за **Clean Architecture**:
+| Компонент | Технологія | Версія |
+|---|---|---|
+| Мова | Python | 3.12 |
+| Веб-фреймворк | Django | 5.0.6 |
+| REST API | Django REST Framework | 3.15.2 |
+| База даних | PostgreSQL | 16 |
+| Черга задач | Celery | 5.3.6 |
+| Брокер | Redis | 7 |
+| Аутентифікація | PyJWT (HS256) | 2.8.0 |
+| Хешування паролів | bcrypt | 4.1.3 |
+| Валідація | Pydantic v2 | 2.7.1 |
+| API документація | drf-spectacular (Swagger) | 0.27.2 |
+| Static files | Whitenoise | 6.6.0 |
+| Тестування | pytest + pytest-django | latest |
+| Лінтер | flake8 + black + isort | latest |
+| Контейнеризація | Docker + Compose | v2 |
+| CI/CD | GitHub Actions | — |
+| Якість коду | SonarQube 10 Community | — |
+
+---
+
+## 4. Архітектура
+
+Проєкт реалізовано за принципами **Clean Architecture** (концентричні шари). Залежності направлені тільки всередину — зовнішні шари залежать від внутрішніх, але не навпаки.
+
+```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    PRESENTATION LAYER                           │
-│         Django Views · REST Controllers · Middleware            │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │                  APPLICATION LAYER                      │    │
-│  │        AuthService · PostService · UserService          │    │
-│  │        DTOs (Pydantic) · Use Cases                      │    │
-│  │  ┌─────────────────────────────────────────────────┐    │    │
-│  │  │                DOMAIN LAYER                     │    │    │
-│  │  │  User, Post entities · Email, Username VO       │    │    │
-│  │  │  Ports (interfaces) · DomainException           │    │    │
-│  │  │  ★ Pure Python — NO Django, NO SQLAlchemy       │    │    │
-│  │  └─────────────────────────────────────────────────┘    │    │
-│  └─────────────────────────────────────────────────────────┘    │
+│         Django Views, Templates, REST Controllers               │
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │                  APPLICATION LAYER                       │   │
+│  │      AuthService, PostService, UserService               │   │
+│  │      DTOs (Pydantic), Use Cases                          │   │
+│  │                                                          │   │
+│  │  ┌────────────────────────────────────────────────────┐  │   │
+│  │  │                DOMAIN LAYER                        │  │   │
+│  │  │  Entities: User, Post                              │  │   │
+│  │  │  Value Objects: Email, Username (immutable)        │  │   │
+│  │  │  Domain Exceptions: DomainException                │  │   │
+│  │  │  Ports (interfaces): UserRepository, PostRepo...   │  │   │
+│  │  │                                                    │  │   │
+│  │  │  ⭐ Pure Python — NO Django, NO SQLAlchemy         │  │   │
+│  │  └────────────────────────────────────────────────────┘  │   │
+│  └──────────────────────────────────────────────────────────┘   │
 │                  INFRASTRUCTURE LAYER                           │
-│      Django ORM · PostgreSQL · JWT · bcrypt · Celery · Redis    │
+│    Django ORM, PostgreSQL, JWT, bcrypt, Celery, Redis           │
 └─────────────────────────────────────────────────────────────────┘
+```
 
-### Принципи SOLID
+### SOLID у проєкті
 
-| Принцип | Де застосовано |
+| Принцип | Реалізація |
 |---|---|
-| **S** — Single Responsibility | Кожен сервіс відповідає за один юз-кейс |
-| **O** — Open/Closed | Нові репозиторії додаються без зміни сервісів |
-| **L** — Liskov | `DjangoUserRepo` повністю замінює `UserRepository` |
+| **S** — Single Responsibility | `AuthService` тільки для auth, `PostService` тільки для posts |
+| **O** — Open/Closed | Новий репозиторій додається без зміни сервісів |
+| **L** — Liskov | `DjangoUserRepository` повністю замінює `UserRepository` |
 | **I** — Interface Segregation | `LikeRepository`, `FollowRepository` — окремі інтерфейси |
 | **D** — Dependency Inversion | Сервіси залежать від абстракцій (Ports), не від Django ORM |
 
+
+
 ### Потік запиту
+
+```
 HTTP Request
-↓
-Middleware (JWT Auth · Logging · CORS)
-↓
-Controller (Pydantic DTO validation)
-↓
-Application Service (orchestrate use case)
-↓
-Domain Entity (business rules & validation)
-↓
-Infrastructure Repository (Django ORM · PostgreSQL)
-↓
-HTTP Response (JSON)
-
----
-
-## 7. Модель даних
-users                                posts
-┌────────────────────┐               ┌────────────────────────────────┐
-│ id         UUID PK │◄──────────────│ id          UUID PK            │
-│ username   VARCHAR │   1 : N       │ author_id   UUID FK            │
-│ email      VARCHAR │               │ content     VARCHAR(280)       │
-│ password   VARCHAR │               │ status      VARCHAR(20)        │
-│ bio        TEXT    │               │ like_count  INTEGER DEFAULT 0  │
-│ avatar_url VARCHAR │               │ parent_id   UUID FK → posts.id │
-│ is_active  BOOLEAN │               │ created_at  TIMESTAMPTZ        │
-│ role       VARCHAR │               │ updated_at  TIMESTAMPTZ        │
-│ created_at TSTZ    │               └───|────────────────────────────┘
-└────────────────────┘                   | 
-│                                        │
-│  follows                               │  likes
-│  ┌────────────────────┐                │  ┌───────────────┐
-├─▶│ follower_id  UUID  │                ├─▶│ user_id  UUID │
-└─▶│ following_id UUID  │                └─▶│ post_id  UUID │
-   │ PK(flwr, flwg)     │                   │ PK(user, post)│
-   └────────────────────┘                   └───────────────┘
-
-### Індекси
-
-```sql
-CREATE INDEX idx_posts_author_created ON posts(author_id, created_at DESC);
-CREATE INDEX idx_follows_follower ON follows(follower_id);
-CREATE UNIQUE INDEX idx_likes_unique ON likes(user_id, post_id);
+    ↓
+Middleware (JWT Auth, CSRF, Logging)
+    ↓
+Controller / View (валідація HTTP input)
+    ↓
+Application Service (оркестрація use case)
+    ↓
+Domain Entity (бізнес-правила)
+    ↓
+Repository Interface (Port)
+    ↓
+Django ORM (Infrastructure)
+    ↓
+PostgreSQL
+    ↓
+HTTP Response (JSON або HTML)
 ```
 
 ---
 
-## 8. REST API
+## 5. Структура проєкту
+
+```
+whispr/
+├── src/
+│   ├── domain/                          # ⭐ Ядро (Pure Python, без фреймворків)
+│   │   ├── entities/
+│   │   │   ├── user.py                  # Rich User entity
+│   │   │   └── post.py                  # Rich Post entity (DRAFT/PUBLISHED/DELETED)
+│   │   ├── value_objects/
+│   │   │   ├── email.py                 # Immutable, самовалідуючий Email VO
+│   │   │   └── username.py              # Immutable Username VO (3-30 символів)
+│   │   ├── exceptions/
+│   │   │   └── __init__.py              # DomainException
+│   │   └── ports/
+│   │       └── __init__.py              # Абстрактні репозиторії (інтерфейси)
+│   │
+│   ├── application/                     # Use Cases (Оркестрація)
+│   │   ├── services/
+│   │   │   ├── auth_service.py          # Register, Login
+│   │   │   ├── post_service.py          # CRUD, Like/Unlike, Feed
+│   │   │   └── user_service.py          # Profile, Follow/Unfollow
+│   │   └── dtos/
+│   │       └── __init__.py              # Pydantic request/response моделі
+│   │
+│   ├── infrastructure/                  # Реалізації інтерфейсів
+│   │   ├── database/
+│   │   │   ├── models.py                # Django ORM: UserORM, PostORM, FollowORM, LikeORM
+│   │   │   ├── repositories.py          # Реалізації репозиторіїв
+│   │   │   ├── migrations/              # Django міграції БД
+│   │   │   │   └── 0001_initial.py      # Початкова міграція
+│   │   │   └── management/commands/
+│   │   │       └── make_admin.py        # python manage.py make_admin <username>
+│   │   ├── security/
+│   │   │   ├── jwt_provider.py          # JWT encode/decode (importlib trick)
+│   │   │   ├── password.py              # bcrypt хешування
+│   │   │   └── authentication.py        # DRF custom JWT authenticator
+│   │   └── external/
+│   │       ├── celery_app.py            # Celery конфігурація
+│   │       ├── tasks.py                 # Async tasks (welcome email, notifications)
+│   │       └── notification.py          # CeleryNotificationSender
+│   │
+│   └── presentation/                    # HTTP шар
+│       ├── controllers/
+│       │   ├── auth_views.py            # POST /api/v1/auth/register, /login
+│       │   ├── post_views.py            # CRUD posts + likes API
+│       │   ├── user_views.py            # Profile + follow API
+│       │   └── frontend_views.py        # Django template views (SSR)
+│       ├── middleware/
+│       │   ├── exception_handler.py     # Глобальний JSON error handler
+│       │   └── logging.py               # Request logging
+│       └── config/
+│           ├── settings.py              # Django settings
+│           ├── urls.py                  # URL routing
+│           ├── wsgi.py                  # WSGI entry point
+│           └── container.py             # Dependency Injection
+│
+├── templates/                           # Django HTML templates (SSR)
+│   ├── base.html                        # Базовий layout: sidebar, модалки, теми
+│   ├── auth/
+│   │   ├── login.html                   # Сторінка входу
+│   │   └── register.html               # Сторінка реєстрації
+│   ├── feed/
+│   │   ├── feed.html                    # Персональна стрічка
+│   │   ├── explore.html                 # Всі дописи
+│   │   └── search.html                  # Пошук користувачів
+│   ├── profile/
+│   │   ├── profile.html                 # Профіль з дописами
+│   │   └── follow_list.html             # Підписники / підписки
+│   ├── admin_panel/
+│   │   └── dashboard.html               # Адмін панель
+│   └── partials/
+│       └── post_card.html               # Картка допису (reusable)
+│
+├── static/                              # CSS та JavaScript
+│   ├── css/
+│   │   ├── base.css                     # Змінні тем, компоненти, пости, модалки
+│   │   ├── layout.css                   # Сайдбар, grid layout, responsive
+│   │   ├── auth.css                     # Сторінки логіну/реєстрації
+│   │   ├── profile.css                  # Профіль користувача
+│   │   └── admin.css                    # Адмін панель
+│   └── js/
+│       ├── utils.js                     # apiCall(), getCookie(), showToast()
+│       ├── theme.js                     # Перемикач темна/світла тема
+│       ├── compose.js                   # Модалка нового допису + превью фото
+│       ├── posts.js                     # Лайки, видалення постів
+│       ├── comments.js                  # Розгортання коментарів, lightbox
+│       └── profile.js                   # Follow/unfollow
+│
+├── tests/
+│   ├── unit/
+│   └── integration/                    
+│
+├── docker/
+│   └── sonarqube.yml                    # Окремий docker-compose для SonarQube
+│
+├── .github/
+│   └── workflows/
+│       └── ci.yml                       # CI/CD: lint → tests → sonar → build
+│
+├── docker-compose.yml                   # Основне середовище
+├── Dockerfile                           # Production образ
+├── sonar-project.properties             # SonarQube конфігурація
+├── requirements.txt                     # Python залежності
+├── setup.cfg                            # flake8, isort, mypy конфіг
+├── pytest.ini                           # pytest конфіг
+├── manage.py                            # Django entry point
+├── .env.example                         # Шаблон змінних середовища
+└── README.md                            # Цей файл
+```
+
+---
+
+## 6. Модель даних
+
+### ERD (Entity-Relationship Diagram)
+
+```
+┌─────────────────────────┐          ┌──────────────────────────────────┐
+│         users           │          │             posts                 │
+├─────────────────────────┤          ├──────────────────────────────────┤
+│ id          UUID PK     │◄─────────│ id          UUID PK              │
+│ username    VARCHAR(30) │  1 : N   │ author_id   UUID FK → users.id   │
+│ email       VARCHAR     │          │ content     VARCHAR(280)          │
+│ password    VARCHAR(128)│          │ image_data  TEXT (base64)         │
+│ bio         TEXT        │          │ status      PUBLISHED/DELETED     │
+│ avatar_url  TEXT        │          │ like_count  INTEGER DEFAULT 0     │
+│ is_active   BOOLEAN     │          │ parent_id   UUID FK → posts.id    │
+│ role        VARCHAR(20) │          │ created_at  TIMESTAMPTZ           │
+│ created_at  TIMESTAMPTZ │          │ updated_at  TIMESTAMPTZ           │
+└─────────────────────────┘          └──────────────────────────────────┘
+           │                                        │
+           │  follows                               │  likes
+           │  ┌───────────────────────┐             │  ┌──────────────────┐
+           ├─▶│ follower_id  UUID FK  │             ├─▶│ user_id  UUID FK │
+           └─▶│ following_id UUID FK  │             └─▶│ post_id  UUID FK │
+              │ created_at  TIMESTAMPTZ│               │ created_at TSTZ  │
+              │ PK(follower,following) │               │ PK(user,post)    │
+              └───────────────────────┘               └──────────────────┘
+```
+
+### Ролі користувачів
+
+| Роль | Опис | Доступ |
+|---|---|---|
+| `ROLE_USER` | Звичайний користувач | Свої пости, лайки, підписки |
+| `ROLE_ADMIN` | Адміністратор | + Адмін панель, бан/видалення |
+
+---
+
+## 7. REST API
 
 **Base URL:** `http://localhost:8000/api/v1`
 **Swagger UI:** `http://localhost:8000/api/docs/`
 
-### Аутентифікація
-POST /api/v1/auth/register    — реєстрація
-POST /api/v1/auth/login       — логін
-POST /api/v1/auth/refresh     — оновлення токена
+### Автентифікація
 
-### Користувачі
-GET    /api/v1/users/{username}           — публічний профіль
-GET    /api/v1/users/me                   — мій профіль (auth)
-PATCH  /api/v1/users/me/update            — оновити профіль (auth)
-POST   /api/v1/users/{username}/follow    — підписатись (auth)
-DELETE /api/v1/users/{username}/follow    — відписатись (auth)
-GET    /api/v1/users/{username}/followers — підписники
-GET    /api/v1/users/{username}/following — підписки
+```
+POST /api/v1/auth/register   — Реєстрація
+POST /api/v1/auth/login      — Вхід
+POST /api/v1/auth/refresh    — Оновлення токену
+```
 
 ### Дописи
-GET    /api/v1/posts/                     — всі дописи
-POST   /api/v1/posts/create/              — новий допис (auth)
-GET    /api/v1/posts/{id}/                — один допис
-PATCH  /api/v1/posts/{id}/edit/           — редагувати (auth, owner)
-DELETE /api/v1/posts/{id}/delete/         — видалити (auth, owner)
-POST   /api/v1/posts/{id}/like/           — лайк (auth)
-DELETE /api/v1/posts/{id}/unlike/         — анлайк (auth)
-GET    /api/v1/feed/                      — персональна стрічка (auth)
+
+```
+GET    /api/v1/posts                    — Всі дописи (explore)
+POST   /api/v1/posts                    — Створити допис
+GET    /api/v1/posts/{id}               — Один допис
+PATCH  /api/v1/posts/{id}               — Редагувати
+DELETE /api/v1/posts/{id}               — Видалити
+POST   /api/v1/posts/{id}/like          — Лайк
+DELETE /api/v1/posts/{id}/like          — Анлайк
+GET    /api/v1/feed                     — Персональна стрічка
+```
+
+### Користувачі
+
+```
+GET    /api/v1/users/me                 — Мій профіль
+PATCH  /api/v1/users/me/update          — Оновити профіль
+GET    /api/v1/users/{username}         — Профіль користувача
+POST   /api/v1/users/{username}/follow  — Підписатись
+DELETE /api/v1/users/{username}/follow  — Відписатись
+GET    /api/v1/users/{username}/followers — Підписники
+GET    /api/v1/users/{username}/following — Підписки
+```
 
 ### Пагінація
-```json
+
+```
+GET /api/v1/feed?page=1&size=20
+
 {
   "items": [...],
   "total": 87,
-  "page": 2,
-  "size": 10,
-  "pages": 9
+  "page": 1,
+  "size": 20,
+  "pages": 5
 }
 ```
 
-### Формат помилок
+### Відповідь на помилку (завжди JSON)
+
 ```json
 {
-  "status": 404,
-  "error": "Not Found",
-  "message": "User 'johndoe' not found",
-  "timestamp": "2025-06-01T12:00:00Z"
+  "status": 422,
+  "error": "Domain Rule Violation",
+  "message": "Post content cannot be empty.",
+  "timestamp": "2025-06-01T12:00:00+00:00"
 }
 ```
 
 ---
 
-## 9. Безпека (JWT)
-Client                        Server
-│                               │
-│── POST /auth/login ──────────▶│
-│   {email, password}           │  1. Verify credentials
-│                               │  2. Generate JWT pair
-│◀─ {access_token,              │
-│    refresh_token} ────────────│
-│                               │
-│── GET /feed ─────────────────▶│
-│  Authorization: Bearer <tok>  │  3. Validate JWT signature
-│                               │  4. Extract user_id + role
-│◀─ 200 OK ───────────────────-─│
-│                               │
-│── POST /auth/refresh ────────▶│
-│   {refresh_token}             │  5. Issue new access_token
-│◀─ {access_token} ──────────-──│
+## 8. Безпека
+
+### JWT Flow
+
+```
+Клієнт                              Сервер
+  │                                    │
+  │── POST /auth/login ───────────────▶│
+  │   {email, password}                │ 1. Перевірка credentials
+  │                                    │ 2. bcrypt.checkpw()
+  │◀── {access_token, refresh_token} ──│ 3. JWT.encode(payload, secret)
+  │                                    │
+  │── GET /feed ──────────────────────▶│
+  │   Authorization: Bearer <token>    │ 4. JWT.decode(token, secret)
+  │                                    │ 5. Перевірка exp, type=="access"
+  │◀── 200 OK {items: [...]} ──────────│ 6. UserORM.objects.get(id=sub)
+```
 
 ### JWT Payload
+
 ```json
 {
   "sub": "550e8400-e29b-41d4-a716-446655440000",
   "role": "ROLE_USER",
+  "type": "access",
   "iat": 1717200000,
   "exp": 1717203600
 }
 ```
 
-### Ролі та дозволи
+### Захист паролів
 
-| Endpoint | ROLE_USER | ROLE_ADMIN |
-|---|:---:|:---:|
-| GET публічних ресурсів | ✅ | ✅ |
-| Створити допис | ✅ | ✅ |
-| Редагувати/видалити власний допис | ✅ | ✅ |
-| Видалити будь-який допис | ❌ | ✅ |
-| Деактивувати користувача | ❌ | ✅ |
+Паролі хешуються через **bcrypt** з автоматичним salt:
+```python
+bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+```
 
----
+### CSRF захист
 
-## 10. Асинхронність (Celery)
-POST /auth/register
-↓ (sync)
-AuthService.register()
-→ User saved in DB
-→ JWT повернуто одразу
-↓ (async → Redis)
-Celery: send_welcome_email.delay(user_id)
-→ Email відправлено у фоні
-
-**Задачі:**
-- `send_welcome_email` — welcome email новому користувачу (3 спроби)
-- `notify_new_follower` — сповіщення про нового підписника (3 спроби)
-
-**Моніторинг:** Flower UI доступний на `http://localhost:5555`
+Всі POST форми містять Django CSRF token:
+```html
+<form method="POST">
+  {% csrf_token %}
+  ...
+</form>
+```
 
 ---
 
-## 11. Тестування
-┌────────────────────────────────────────────────┐
-│              TEST PYRAMID                      │
-│                                                │
-│       ┌──────────────────────┐                 │
-│       │  Integration Tests   │  ← real DB      │
-│       │  (pytest-django)     │                 │
-│     ┌─┴──────────────────────┴─┐               │
-│     │      Unit Tests          │  ← mocks      │
-│     │  (pytest + Mock)         │               │
-│     └──────────────────────────┘               │
-└────────────────────────────────────────────────┘
+## 9. Фронтенд
 
-**Unit тести** — domain entities, value objects, сервіси через mock-репозиторії.
+Фронтенд реалізований як **Server-Side Rendering (SSR)** через Django Templates. JavaScript використовується тільки для інтерактивності (лайки, коментарі, теми) без повного перезавантаження сторінки.
 
-**Integration тести** — REST API endpoints, frontend views, ORM репозиторії з реальною PostgreSQL, management команди.
+### Сторінки
 
-**Покриття: 94%**
+| URL | Опис |
+|---|---|
+| `/` | Персональна стрічка |
+| `/explore` | Всі дописи всіх користувачів |
+| `/search?q=sofia` | Пошук користувачів |
+| `/profile` | Мій профіль (редирект) |
+| `/user/{username}` | Профіль будь-якого користувача |
+| `/user/{username}/followers` | Підписники |
+| `/user/{username}/following` | Підписки |
+| `/login` | Сторінка входу |
+| `/register` | Реєстрація |
+| `/admin-panel` | Адмін панель (тільки ROLE_ADMIN) |
 
-### Запуск
+### Теми оформлення
+
+Реалізовані через CSS змінні:
+
+```css
+/* Темна тема (за замовчуванням) */
+:root {
+  --bg: #0d0d0f;
+  --bg-card: #1a1a1f;
+  --text: #f5f4f0;
+  --accent: #e8b86d;
+}
+
+/* Світла тема */
+[data-theme="light"] {
+  --bg: #f2f1f7;
+  --bg-card: #ffffff;
+  --text: #1a1a2e;
+}
+```
+
+Тема зберігається в `localStorage` і застосовується до завантаження сторінки через inline script у `<head>`.
+
+### JavaScript модулі
+
+| Файл | Відповідальність |
+|---|---|
+| `utils.js` | `apiCall()` з JWT, `getCookie()`, `showToast()` |
+| `theme.js` | Перемикач темна/світла тема |
+| `compose.js` | Модалка нового допису, превью фото |
+| `posts.js` | Лайки (optimistic UI), видалення |
+| `comments.js` | Розгортання коментарів, image lightbox |
+| `profile.js` | Follow/unfollow |
+
+### Оптимістичний UI для лайків
+
+Лайк оновлюється миттєво на екрані, а потім підтверджується через API. При помилці — відкочується назад:
+
+```javascript
+// Миттєво оновлюємо UI
+btn.classList.toggle('liked', !isLiked);
+countEl.textContent = count + (isLiked ? -1 : 1);
+
+// Потім підтверджуємо через API
+try {
+  await apiCall(`/api/v1/posts/${id}/like`, {method: liked ? 'DELETE' : 'POST'});
+} catch {
+  // Відкочуємо при помилці
+  btn.classList.toggle('liked', isLiked);
+  countEl.textContent = count + (isLiked ? 1 : -1);
+}
+```
+
+---
+
+## 10. Тестування
+
+### Стратегія
+
+```
+        ┌──────────────────────────┐
+        │    Integration Tests      │  ← Репозиторії (реальна PostgreSQL)
+        ├──────────────────────────┤
+        │       Unit Tests          │  ← Domain + Application (mocked repos)
+        └──────────────────────────┘
+```
+
+## Тестування
+
+**Unit тести** — domain entities, value objects, сервіси через моки.
+
+**Integration тести** — REST API endpoints, frontend views, репозиторії з реальною БД, management команди.
+
+**Покриття: 94%** — `pytest --cov=src`
+
+### Запуск тестів
 
 ```bash
-# Всі тести з покриттям
+# Всі unit тести
 docker compose exec web pytest tests/unit/ tests/integration/ \
   --cov=src \
   --cov-report=term-missing \
   --cov-report=xml:coverage.xml \
   --junitxml=junit.xml
 
-# Тільки unit
-docker compose exec web pytest tests/unit/
+# Конкретний файл
+docker-compose exec web pytest tests/unit/test_domain_entities.py -v
 
-# Тільки integration
-docker compose exec web pytest tests/integration/
+# Конкретний клас
+docker-compose exec web pytest tests/unit/test_services.py::TestPostServiceLike -v
 ```
 
-### Приклади тестів
+### Очікуване покриття
 
-```python
-# Domain — валідація бізнес-правил
-def test_post_cannot_exceed_280_chars():
-    with pytest.raises(DomainException):
-        Post.create(author_id=uuid4(), content="x" * 281)
-
-def test_deleted_post_cannot_be_liked():
-    post = Post.create(author_id=uuid4(), content="Hello")
-    post.delete()
-    with pytest.raises(DomainException):
-        post.increment_likes()
-
-# Service — оркестрація через моки
-def test_create_post_saves_and_returns_response():
-    mock_repo = Mock(spec=PostRepository)
-    mock_repo.save.return_value = fake_post
-    service = PostService(mock_repo, mock_likes, mock_users)
-    result = service.create_post(user_id, CreatePostRequest(content="Hi"))
-    mock_repo.save.assert_called_once()
-    assert result.content == "Hi"
-```
+| Шар | Покриття |
+|---|---|
+| `src/domain` | ~95% |
+| `src/application` | ~90% |
+| `src/presentation/middleware` | ~95% |
 
 ---
 
-## 12. DevOps: Docker Compose та CI/CD
+## 11. SonarQube
 
-### Сервіси Docker Compose
-┌──────────────────────────────────────────────────────────┐
-│                   docker-compose.yml                     │
-│                                                          │
-│  ┌──────────┐    ┌────────────┐    ┌──────────────────┐  │
-│  │   web    │    │ postgres   │    │     redis        │  │
-│  │  :8000   │───▶│  :5432     │    │     :6379        │  │
-│  │  Django  │    │ healthcheck│    │  Celery broker   │  │
-│  └────┬─────┘    └────────────┘    └──────────────────┘  │
-│       │                                   ▲              │
-│  ┌────▼─────────────────────────────────┐ │              │
-│  │        celery_worker                 │─┘              │
-│  │   (background task processor)        │                │
-│  └──────────────────────────────────────┘                │
-└──────────────────────────────────────────────────────────┘
+SonarQube аналізує якість коду: баги, вразливості, code smells, дублювання, покриття тестами.
 
-### CI/CD Pipeline (GitHub Actions)
-Push / PR to main
-↓
-
-Lint        — black, isort, flake8
-Unit Tests  — pytest tests/unit/ + coverage
-Docker Build — docker build
-Integration Tests — pytest tests/integration/ (PostgreSQL + Redis)
-SonarCloud Analysis — Quality Gate
-
-
----
-
-## 13. Швидкий старт
-
-### Передумови
-- Docker Desktop ≥ 24
-- Docker Compose v2
+### Запуск SonarQube локально
 
 ```bash
-# 1. Клонувати
-git clone https://github.com/SonyaNazaryshyna/project2_refactoring.git
-cd project2_refactoring
+# Запусти SonarQube (окремо від основного проєкту)
+docker compose -f docker/sonarqube.yml up -d
 
-# 2. Налаштувати змінні середовища
-cp .env.example .env
+open http://localhost:9000
 
-# 3. Запустити
-docker compose up -d
-
-# 4. Міграції
-docker compose exec web python manage.py migrate
-
-# 5. Створити адміна (опційно)
-docker compose exec web python manage.py make_admin <username>
+# Логін: admin / admin
+# Змінити пароль при першому вході
 ```
 
-### Доступні сервіси
+### Створення проєкту в SonarQube
+
+1. Натисни **"Create a local project"**
+2. **Project key:** `whispr-microblog`
+3. **Display name:** `Whispr Microblog`
+4. Натисни **"Set Up"** → **"Locally"**
+5. **Generate a token** → скопіюй токен
+
+### Локальний аналіз
+
+```bash
+docker-compose exec web pytest tests/unit/ \
+  --cov=src \
+  --cov-report=xml:coverage.xml
+
+docker run --rm \
+  --network=host \
+  -e SONAR_HOST_URL=http://localhost:9000 \
+  -e SONAR_TOKEN=твій_токен_з_sonarqube \
+  -v "$(pwd):/usr/src" \
+  sonarsource/sonar-scanner-cli
+
+# Результати на http://localhost:9000/dashboard?id=whispr-microblog
+```
+
+### Конфігурація (sonar-project.properties)
+
+```properties
+sonar.projectKey=whispr-microblog
+sonar.projectName=Whispr Microblog
+sonar.sources=src
+sonar.tests=tests
+sonar.language=py
+sonar.python.version=3.12
+sonar.python.coverage.reportPaths=coverage.xml
+sonar.exclusions=**/migrations/**,**/staticfiles/**,**/templates/**
+```
+
+### SonarCloud (хмарний варіант для GitHub)
+
+Для автоматичного аналізу при кожному push на GitHub:
+
+1. Зайди на **sonarcloud.io** через GitHub акаунт
+2. Натисни **"+"** → **"Analyze new project"** → вибери репозиторій
+3. Отримай токен
+4. Додай до `sonar-project.properties`:
+   ```properties
+   sonar.organization=твій_organization_key
+   ```
+5. Додай секрети в GitHub (Settings → Secrets):
+   - `SONAR_TOKEN` — токен з SonarCloud
+   - `SONAR_HOST_URL` — `https://sonarcloud.io`
+
+---
+
+## 12. CI/CD
+
+### Pipeline (.github/workflows/ci.yml)
+
+```
+Push / Pull Request
+        │
+        ▼
+┌───────────────┐    ┌─────────────────┐    ┌──────────────────┐
+│  1. Lint      │    │ 2. Unit Tests   │    │ 3. Integration   │
+│               │    │                 │    │    Tests         │
+│ • black       │    │ • pytest        │    │                  │
+│ • isort       │    │ • coverage.xml  │    │ • real postgres  │
+│ • flake8      │    │                 │    │ • real redis     │
+└───────────────┘    └────────┬────────┘    └──────────────────┘
+                              │
+                              ▼
+                   ┌─────────────────────┐
+                   │  4. SonarQube       │
+                   │  (main/develop only)│
+                   │  • code quality     │
+                   │  • coverage report  │
+                   └──────────┬──────────┘
+                              │
+                              ▼
+                   ┌─────────────────────┐
+                   │  5. Docker Build    │
+                   │  • build image      │
+                   │  • validate compose │
+                   └──────────┬──────────┘
+                              │
+                    (тільки main branch)
+                              ▼
+                   ┌─────────────────────┐
+                   │  6. Deploy          │
+                   │  • SSH to server    │
+                   │  • git pull         │
+                   │  • docker compose   │
+                   │  • migrate          │
+                   └─────────────────────┘
+```
+
+### Необхідні GitHub Secrets
+
+| Secret | Опис |
+|---|---|
+| `SONAR_TOKEN` | Токен з SonarQube/SonarCloud |
+| `SONAR_HOST_URL` | URL SonarQube (`http://...` або `https://sonarcloud.io`) |
+| `DEPLOY_HOST` | IP адреса production сервера |
+| `DEPLOY_USER` | SSH username |
+| `DEPLOY_SSH_KEY` | Приватний SSH ключ |
+
+---
+
+## 13. DevOps
+
+### Docker Compose архітектура
+
+```
+┌─────────────────────────────────────────────────────┐
+│                docker-compose.yml                   │
+│                                                     │
+│  ┌──────────┐   ┌───────────┐   ┌───────────────┐  │
+│  │   web    │   │ postgres  │   │     redis     │  │
+│  │ :8000    │──▶│  :5432    │   │     :6379     │  │
+│  │ Django   │   │ healthchk │   │  Celery broker│  │
+│  └────┬─────┘   └───────────┘   └───────────────┘  │
+│       │                                 ▲           │
+│  ┌────▼──────────────────────────────┐  │           │
+│  │        celery_worker              │──┘           │
+│  │  (background tasks processor)    │              │
+│  └───────────────────────────────────┘              │
+│  ┌────────────────────────────────────┐             │
+│  │   flower :5555 (task monitor)      │             │
+│  └────────────────────────────────────┘             │
+└─────────────────────────────────────────────────────┘
+```
+
+### Healthchecks
+
+Сервіс `web` не стартує поки postgres і redis не пройдуть healthcheck:
+
+```yaml
+depends_on:
+  postgres:
+    condition: service_healthy
+  redis:
+    condition: service_healthy
+```
+
+---
+
+## 14. Швидкий старт
+
+### Вимоги
+
+- Docker Desktop 24+
+- Docker Compose v2
+- Git
+
+### Запуск
+
+```bash
+# 1. Клонуй репозиторій
+git clone https://github.com/your-org/whispr.git
+cd whispr
+
+# 2. Скопіюй змінні середовища
+cp .env.example .env
+
+# 3. Збери та запусти (перший раз ~3 хвилини)
+docker-compose build --no-cache
+docker-compose up -d
+
+# 4. Перевір що все запустилось
+docker-compose ps
+# Всі контейнери мають бути Up/healthy
+
+# 5. Перевір логи web
+docker-compose logs web --tail=20
+# Має бути: "Starting gunicorn ... Listening at: http://0.0.0.0:8000"
+```
+
+### Доступні адреси
 
 | Сервіс | URL |
 |---|---|
-| Застосунок | http://localhost:8000 |
-| Swagger UI | http://localhost:8000/api/docs/ |
-| Django Admin | http://localhost:8000/admin/ |
-| Flower (Celery) | http://localhost:5555 |
+| **Сайт** | http://localhost:8000 |
+| **Swagger API** | http://localhost:8000/api/docs/ |
+| **Django Admin** | http://localhost:8000/admin/ |
+| **Flower (Celery)** | http://localhost:5555 |
 
-### Змінні середовища (.env.example)
+### Створити адміна
 
-```env
-DJANGO_SECRET_KEY=your-secret-key
-DEBUG=True
-POSTGRES_DB=whispr
-POSTGRES_USER=whispr
-POSTGRES_PASSWORD=whispr_pass
-POSTGRES_HOST=postgres
-POSTGRES_PORT=5432
-REDIS_URL=redis://redis:6379/0
-JWT_SECRET=your-jwt-secret
-JWT_ACCESS_TTL_MINUTES=60
-JWT_REFRESH_TTL_DAYS=7
-ALLOWED_HOSTS=localhost 127.0.0.1
+```bash
+# Зареєструйся через сайт, потім:
+docker-compose exec web python manage.py make_admin твій_username
+
+# Тепер у sidebar з'явиться пункт "Адмін"
+# та відкриється /admin-panel
 ```
 
 ---
 
-## 14. Структура проєкту
-project2_refactoring/
-├── src/
-│   ├── domain/                     # ★ Pure Python — no frameworks
-│   │   ├── entities/
-│   │   │   ├── user.py             # Rich User entity
-│   │   │   └── post.py             # Rich Post entity
-│   │   ├── value_objects/
-│   │   │   ├── email.py            # Immutable Email VO
-│   │   │   └── username.py         # Immutable Username VO
-│   │   ├── exceptions/
-│   │   │   └── init.py         # DomainException
-│   │   └── ports/
-│   │       └── init.py         # Abstract repository interfaces
-│   │
-│   ├── application/
-│   │   ├── services/
-│   │   │   ├── auth_service.py     # Register, Login
-│   │   │   ├── post_service.py     # CRUD, Like/Unlike, Feed
-│   │   │   └── user_service.py     # Profile, Follow/Unfollow
-│   │   └── dtos/
-│   │       └── init.py         # Pydantic request/response models
-│   │
-│   ├── infrastructure/
-│   │   ├── database/
-│   │   │   ├── models.py           # Django ORM models
-│   │   │   ├── repositories.py     # Repository implementations
-│   │   │   └── migrations/
-│   │   ├── security/
-│   │   │   ├── jwt_provider.py     # JWT Provider (HS256)
-│   │   │   ├── password.py         # bcrypt PasswordEncoder
-│   │   │   └── authentication.py   # DRF custom authenticator
-│   │   └── external/
-│   │       ├── celery_app.py
-│   │       ├── tasks.py            # send_welcome_email, notify_new_follower
-│   │       └── notification.py
-│   │
-│   └── presentation/
-│       ├── controllers/
-│       │   ├── auth_views.py
-│       │   ├── post_views.py
-│       │   ├── user_views.py
-│       │   └── frontend_views.py   # Server-side rendered templates
-│       ├── middleware/
-│       │   ├── exception_handler.py
-│       │   └── logging.py
-│       └── config/
-│           ├── settings.py
-│           ├── urls.py
-│           ├── container.py        # Dependency injection
-│           └── wsgi.py
-│
-├── tests/
-│   ├── unit/
-│   │   ├── test_domain_entities.py
-│   │   └── test_services.py
-│   └── integration/
-│       ├── test_repositories.py
-│       ├── test_auth_views.py
-│       ├── test_frontend_views.py
-│       ├── test_post_views.py
-│       ├── test_user_views.py
-│       ├── test_container.py
-│       └── test_make_admin.py
-│
-├── .github/
-│   └── workflows/
-│       └── ci.yml
-├── docker-compose.yml
-├── Dockerfile
-├── .env.example
-├── requirements.txt
-├── pytest.ini
-├── sonar-project.properties
-└── README.md
+## 15. Змінні середовища
+
+Скопіюй `.env.example` у `.env` і заміни значення:
+
+```env
+# Django
+DJANGO_SECRET_KEY=your-very-secret-key-change-in-production
+DEBUG=False
+ALLOWED_HOSTS=localhost 127.0.0.1
+
+# PostgreSQL
+POSTGRES_DB=microblog
+POSTGRES_USER=microblog
+POSTGRES_PASSWORD=strong-password-here
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+
+# Redis / Celery
+REDIS_URL=redis://redis:6379/0
+
+# JWT
+JWT_SECRET=your-jwt-secret-change-in-production
+JWT_ACCESS_TTL_MINUTES=60
+JWT_REFRESH_TTL_DAYS=7
+
+# SonarQube (для локального аналізу)
+SONAR_TOKEN=your-sonarqube-token
+SONAR_HOST_URL=http://localhost:9000
+```
 
 ---
 
-## 15. Технологічний стек
+## 16. Корисні команди
 
-| Компонент | Технологія | Версія |
-|---|---|---|
-| Мова | Python | 3.12 |
-| Веб-фреймворк | Django | 5.0 |
-| REST API | Django REST Framework | 3.15 |
-| База даних | PostgreSQL | 16 |
-| Черга задач | Celery | 5.3 |
-| Брокер | Redis | 7 |
-| Аутентифікація | PyJWT (HS256) | 2.8 |
-| Хешування | bcrypt | 4.1 |
-| Валідація | Pydantic v2 | 2.6 |
-| API документація | drf-spectacular (Swagger) | 0.27 |
-| Тестування | pytest + pytest-django | latest |
-| Лінтер | flake8 + black + isort | latest |
-| Code Quality | SonarCloud | — |
-| Контейнеризація | Docker + Compose v2 | — |
-| CI/CD | GitHub Actions | — |
+```bash
+# ── Docker ────────────────────────────────────────
+# Запустити
+docker-compose up -d
+
+# Зупинити (зберегти дані)
+docker-compose down
+
+# Зупинити і видалити дані БД
+docker-compose down -v
+
+# Перебудувати без кешу
+docker-compose build --no-cache
+
+# Логи конкретного сервісу
+docker-compose logs web -f
+docker-compose logs celery_worker -f
+
+# ── Django ────────────────────────────────────────
+# Django shell
+docker-compose exec web python manage.py shell
+
+# Міграції
+docker-compose exec web python manage.py migrate
+
+# Зробити адміном
+docker-compose exec web python manage.py make_admin username
+
+# Createsuperuser (для Django Admin /admin/)
+docker-compose exec web python manage.py createsuperuser
+
+# ── Тести ─────────────────────────────────────────
+# Всі unit тести
+docker-compose exec web pytest tests/unit/ -v
+
+# З покриттям
+docker-compose exec web pytest tests/unit/ \
+  --cov=src/domain --cov=src/application \
+  --cov-report=term-missing
+
+# ── База даних ────────────────────────────────────
+# Підключитись до psql
+docker-compose exec postgres psql -U microblog -d microblog
+
+# Переглянути користувачів
+docker-compose exec postgres psql -U microblog -d microblog \
+  -c "SELECT username, email, role, is_active FROM users;"
+
+# ── SonarQube ─────────────────────────────────────
+# Запустити SonarQube
+docker compose -f docker/sonarqube.yml up -d
+
+# Зупинити SonarQube
+docker compose -f docker/sonarqube.yml down
+
+# Запустити аналіз
+docker run --rm --network=host \
+  -e SONAR_HOST_URL=http://localhost:9000 \
+  -e SONAR_TOKEN=твій_токен \
+  -v "$(pwd):/usr/src" \
+  sonarsource/sonar-scanner-cli
+
+# ── Git / CI ──────────────────────────────────────
+# Запушити і запустити CI
+git add . && git commit -m "feat: your change" && git push origin main
+
+# Переглянути статус CI
+# github.com/your-org/whispr/actions
+```
