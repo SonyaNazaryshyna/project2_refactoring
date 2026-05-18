@@ -145,6 +145,48 @@
 
 Проєкт реалізовано за принципами **Clean Architecture** (концентричні шари). Залежності направлені тільки всередину — зовнішні шари залежать від внутрішніх, але не навпаки.
 
+```mermaid
+graph TB
+    subgraph Frontend
+        HTML[HTML Templates]
+        JS[JavaScript]
+    end
+    subgraph Presentation
+        Controllers[REST Controllers]
+        FrontendViews[Frontend Views]
+    end
+    subgraph Application
+        PostService[Post Service]
+        UserService[User Service]
+        AuthService[Auth Service]
+    end
+    subgraph Domain
+        Entities[Entities]
+        Ports[Repository Interfaces]
+    end
+    subgraph Infrastructure
+        DjangoRepos[Django Repositories]
+        ORM[Django ORM Models]
+        JWT[JWT Auth]
+    end
+    subgraph Database
+        PG[(PostgreSQL)]
+    end
+
+    HTML --> Controllers
+    JS --> Controllers
+    Controllers --> PostService
+    Controllers --> UserService
+    Controllers --> AuthService
+    PostService --> Ports
+    UserService --> Ports
+    Ports <|.. DjangoRepos
+    DjangoRepos --> ORM
+    ORM --> PG
+    JWT --> Controllers
+  
+ʼʼʼ
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    PRESENTATION LAYER                           │
@@ -170,6 +212,8 @@
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+[!Service](/assets/service.png)
+
 ### SOLID у проєкті
 
 | Принцип | Реалізація |
@@ -180,7 +224,8 @@
 | **I** — Interface Segregation | `LikeRepository`, `FollowRepository` — окремі інтерфейси |
 | **D** — Dependency Inversion | Сервіси залежать від абстракцій (Ports), не від Django ORM |
 
-
+### Patters
+[!Patterns](/assets/patterns.png)
 
 ### Потік запиту
 
@@ -204,6 +249,7 @@ PostgreSQL
 HTTP Response (JSON або HTML)
 ```
 
+[!Sequence](/assets/sequence.png)
 ---
 
 ## 5. Структура проєкту
@@ -323,29 +369,7 @@ whispr/
 
 ### ERD (Entity-Relationship Diagram)
 
-```
-┌─────────────────────────┐          ┌──────────────────────────────────┐
-│         users           │          │             posts                 │
-├─────────────────────────┤          ├──────────────────────────────────┤
-│ id          UUID PK     │◄─────────│ id          UUID PK              │
-│ username    VARCHAR(30) │  1 : N   │ author_id   UUID FK → users.id   │
-│ email       VARCHAR     │          │ content     VARCHAR(280)          │
-│ password    VARCHAR(128)│          │ image_data  TEXT (base64)         │
-│ bio         TEXT        │          │ status      PUBLISHED/DELETED     │
-│ avatar_url  TEXT        │          │ like_count  INTEGER DEFAULT 0     │
-│ is_active   BOOLEAN     │          │ parent_id   UUID FK → posts.id    │
-│ role        VARCHAR(20) │          │ created_at  TIMESTAMPTZ           │
-│ created_at  TIMESTAMPTZ │          │ updated_at  TIMESTAMPTZ           │
-└─────────────────────────┘          └──────────────────────────────────┘
-           │                                        │
-           │  follows                               │  likes
-           │  ┌───────────────────────┐             │  ┌──────────────────┐
-           ├─▶│ follower_id  UUID FK  │             ├─▶│ user_id  UUID FK │
-           └─▶│ following_id UUID FK  │             └─▶│ post_id  UUID FK │
-              │ created_at  TIMESTAMPTZ│               │ created_at TSTZ  │
-              │ PK(follower,following) │               │ PK(user,post)    │
-              └───────────────────────┘               └──────────────────┘
-```
+[!ERD](/assets/ER.png)
 
 ### Ролі користувачів
 
@@ -353,6 +377,9 @@ whispr/
 |---|---|---|
 | `ROLE_USER` | Звичайний користувач | Свої пости, лайки, підписки |
 | `ROLE_ADMIN` | Адміністратор | + Адмін панель, бан/видалення |
+
+### Use Cases
+[!US](/assets/uc.png)
 
 ---
 
