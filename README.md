@@ -170,7 +170,7 @@
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-[!Service](/assets/service.png)
+![Service](/assets/service.png)
 
 ### SOLID у проєкті
 
@@ -183,7 +183,7 @@
 | **D** — Dependency Inversion | Сервіси залежать від абстракцій (Ports), не від Django ORM |
 
 ### Patters
-[!Patterns](/assets/patterns.png)
+![Patterns](/assets/patterns.png)
 
 ### Потік запиту
 
@@ -207,7 +207,7 @@ PostgreSQL
 HTTP Response (JSON або HTML)
 ```
 
-[!Sequence](/assets/sequence.png)
+![Sequence](/assets/sequence.png)
 ---
 
 ## 5. Структура проєкту
@@ -327,7 +327,7 @@ whispr/
 
 ### ERD (Entity-Relationship Diagram)
 
-[!ERD](/assets/ER.png)
+![ERD](/assets/ER.png)
 
 ### Ролі користувачів
 
@@ -337,7 +337,7 @@ whispr/
 | `ROLE_ADMIN` | Адміністратор | + Адмін панель, бан/видалення |
 
 ### Use Cases
-[!US](/assets/uc.png)
+![US](/assets/uc.png)
 
 ---
 
