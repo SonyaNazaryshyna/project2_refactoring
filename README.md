@@ -145,48 +145,6 @@
 
 Проєкт реалізовано за принципами **Clean Architecture** (концентричні шари). Залежності направлені тільки всередину — зовнішні шари залежать від внутрішніх, але не навпаки.
 
-```mermaid
-graph TB
-    subgraph Frontend
-        HTML[HTML Templates]
-        JS[JavaScript]
-    end
-    subgraph Presentation
-        Controllers[REST Controllers]
-        FrontendViews[Frontend Views]
-    end
-    subgraph Application
-        PostService[Post Service]
-        UserService[User Service]
-        AuthService[Auth Service]
-    end
-    subgraph Domain
-        Entities[Entities]
-        Ports[Repository Interfaces]
-    end
-    subgraph Infrastructure
-        DjangoRepos[Django Repositories]
-        ORM[Django ORM Models]
-        JWT[JWT Auth]
-    end
-    subgraph Database
-        PG[(PostgreSQL)]
-    end
-
-    HTML --> Controllers
-    JS --> Controllers
-    Controllers --> PostService
-    Controllers --> UserService
-    Controllers --> AuthService
-    PostService --> Ports
-    UserService --> Ports
-    Ports <|.. DjangoRepos
-    DjangoRepos --> ORM
-    ORM --> PG
-    JWT --> Controllers
-  
-```
-
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    PRESENTATION LAYER                           │
