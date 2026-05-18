@@ -47,7 +47,7 @@ urlpatterns = [
     path("api/v1/posts/<str:post_id>/", post_views.post_detail_get),
     path("api/v1/posts/<str:post_id>/edit/", post_views.post_detail_edit),
     path("api/v1/posts/<str:post_id>/delete/", post_views.post_detail_delete),
-    path("api/v1/posts/<str:post_id>/like/", post_views.post_like_add),
+    path("api/v1/posts/<str:post_id>/like/", post_views.post_like_add),     
     path("api/v1/posts/<str:post_id>/unlike/", post_views.post_like_remove),
     # Users API
     path("api/v1/users/me", user_views.me),

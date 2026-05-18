@@ -281,13 +281,14 @@ async function toggleLike(post, card) {
   const btn = card.querySelector('.like-btn');
   const isLiked = btn.classList.contains('liked');
   const countEl = btn.querySelector('span');
-  const method = isLiked ? 'DELETE' : 'POST';
 
   btn.classList.toggle('liked', !isLiked);
   countEl.textContent = parseInt(countEl.textContent) + (isLiked ? -1 : 1);
 
   try {
-    await api(`/posts/${post.id}/like`, { method });
+    const url = isLiked ? `/posts/${post.id}/unlike/` : `/posts/${post.id}/like/`;
+    const method = isLiked ? 'DELETE' : 'POST';
+    await api(url, { method });
   } catch {
     btn.classList.toggle('liked', isLiked);
     countEl.textContent = parseInt(countEl.textContent) + (isLiked ? 1 : -1);
@@ -599,12 +600,13 @@ document.getElementById('submit-post').addEventListener('click', async () => {
   const btn = document.getElementById('submit-post');
   setLoading(btn, true);
   try {
-    const post = await api('/posts', { method: 'POST', body: JSON.stringify({ content }) });
+    const post = await api('/posts/create/', { method: 'POST', body: JSON.stringify({ content }) });
+    console.log('post created:', post);           // ← що повернув сервер
+    console.log('currentView:', state.currentView); // ← яка зараз вкладка
     document.getElementById('compose-modal').classList.add('hidden');
     document.getElementById('compose-text').value = '';
     updateCharCount(0);
     toast('Допис опубліковано 🎉');
-    // Prepend to current view
     prependPost(post);
     updatePostsCount(1);
   } catch(err) {
@@ -614,6 +616,7 @@ document.getElementById('submit-post').addEventListener('click', async () => {
 });
 
 function prependPost(post) {
+  console.log('currentView:', state.currentView);
   const containers = { feed: 'feed-posts', explore: 'explore-posts' };
   const cid = containers[state.currentView];
   if (!cid) return;

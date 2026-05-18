@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     err.classList.add('hidden');
     if (!content) return;
     try {
-      await apiCall('/api/v1/posts', {method:'POST', body:JSON.stringify({content})});
+      await apiCall('/api/v1/posts/create/', {method:'POST', body:JSON.stringify({content})});
       closeCompose();
       showToast('Допис опубліковано 🎉');
       setTimeout(() => location.reload(), 600);

@@ -8,7 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.dataset.liked = String(!liked);
       cnt.textContent = parseInt(cnt.textContent) + (liked ? -1 : 1);
       try {
-        await apiCall(`/api/v1/posts/${id}/like`, {method: liked ? 'DELETE' : 'POST'});
+        const url = liked ? `/api/v1/posts/${id}/unlike/` : `/api/v1/posts/${id}/like/`;
+        await apiCall(url, {method: liked ? 'DELETE' : 'POST'});
       } catch {
         btn.classList.toggle('liked', liked);
         btn.dataset.liked = String(liked);
@@ -22,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const id = btn.dataset.id;
       const card = document.querySelector(`.post-card[data-id="${id}"]`);
       try {
-        await apiCall(`/api/v1/posts/${id}`, {method:'DELETE'});
+        await apiCall(`/api/v1/posts/${id}/delete/`, {method:'DELETE'});
         card.style.cssText = 'opacity:0;transform:translateX(-14px);transition:.25s';
         setTimeout(() => card.remove(), 260);
         showToast('Допис видалено');
