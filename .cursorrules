@@ -1,0 +1,354 @@
+## PROJECT OVERVIEW
+
+Whispr — мікроблогінговий сервіс (аналог Twitter).
+Стек: Python 3.12, Django 5, Django REST Framework, PostgreSQL, Celery, Redis, Docker.
+Архітектура: Clean Architecture + Domain-Driven Design (DDD).
+Фронтенд: Django Templates (SSR) + Vanilla JS.
+
+---
+
+## ARCHITECTURE RULES
+
+### Шари і їх відповідальності:
+
+1. **Domain** (`src/domain/`) — ЯДРО. Pure Python. Жодних імпортів Django/SQLAlchemy/etc.
+   - `entities/` — Rich Domain Model (логіка всередині методів)
+   - `value_objects/` — незмінні об'єкти з самовалідацією
+   - `exceptions/` — DomainException і підкласи
+   - `ports/` — абстрактні репозиторії (ABC)
+
+2. **Application** (`src/application/`) — Use Cases. Оркестрація.
+   - `services/` — AuthService, PostService, UserService
+   - `dtos/` — Pydantic моделі для вводу/виводу
+   - Сервіси залежать тільки від domain портів (абстракцій)
+
+3. **Infrastructure** (`src/infrastructure/`) — Реалізації.
+   - `database/` — Django ORM моделі та репозиторії
+   - `security/` — JWT, bcrypt
+   - `external/` — Celery tasks, notifications
+
+4. **Presentation** (`src/presentation/`) — HTTP шар.
+   - `controllers/` — REST API views + Django template views
+   - `middleware/` — exception handler, logging
+   - `config/` — settings, urls, DI container
+
+### ЗАБОРОНЕНО:
+- Імпортувати Django в domain шар
+- Писати бізнес-логіку в контролерах або views
+- Викликати ORM напряму в сервісах (тільки через репозиторії)
+- Використовувати `order.setStatus("PAID")` — тільки `order.pay()`
+
+---
+
+## DOMAIN RULES
+
+### Rich Domain Model (обов'язково):
+```python
+# ПРАВИЛЬНО — логіка в entity
+class Post:
+    def delete(self):
+        if self.status == PostStatus.DELETED:
+            raise DomainException("Already deleted.")
+        self.status = PostStatus.DELETED
+        self.updated_at = datetime.utcnow()
+
+# НЕПРАВИЛЬНО — анемічна модель
+post.status = "DELETED"  # ніколи так не робити
+```
+
+### Value Objects (для Email, Username і подібних):
+```python
+@dataclass(frozen=True)  # завжди frozen=True
+class Email:
+    value: str
+    def __post_init__(self):
+        if not _EMAIL_RE.match(self.value):
+            raise DomainException("Invalid email")
+```
+
+### Factory Methods в entities:
+```python
+# Завжди використовувати classmethod create()
+user = User.create(username, email, password_hash)
+# НЕ User(id=uuid4(), username=...) напряму з сервісів
+```
+
+---
+
+## CODE STYLE
+
+### Python:
+- Тип анотації ОБОВ'ЯЗКОВІ для всіх публічних методів
+- `from __future__ import annotations` на початку файлів з type hints
+- Максимальна довжина рядка: 120 символів
+- Форматер: black (автоматично)
+- Сортування імпортів: isort з профілем black
+- F-strings для всіх рядкових інтерполяцій
+
+### Іменування:
+```python
+# Класи — PascalCase
+class UserService: ...
+class DjangoUserRepository: ...
+
+# Функції і змінні — snake_case
+def find_by_email(email: str): ...
+user_id = uuid4()
+
+# Константи — UPPER_SNAKE_CASE
+MAX_CONTENT_LENGTH = 280
+
+# Приватні методи — підкреслення
+def _validate_content(content: str): ...
+def _to_response(post: Post): ...
+```
+
+### Імпорти (порядок):
+```python
+# 1. Стандартна бібліотека
+from __future__ import annotations
+from datetime import datetime
+from uuid import UUID
+
+# 2. Сторонні бібліотеки
+from django.conf import settings
+from rest_framework.decorators import api_view
+
+# 3. Внутрішні (від domain до presentation)
+from src.domain.entities.user import User
+from src.application.services.auth_service import AuthService
+```
+
+---
+
+## DJANGO SPECIFICS
+
+### Models (тільки в infrastructure):
+```python
+# Завжди вказувати db_table
+class UserORM(AbstractBaseUser, PermissionsMixin):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    # ...
+    class Meta:
+        db_table = "users"
+```
+
+### Views (тонкі контролери):
+```python
+# Контролер тільки для HTTP — без бізнес-логіки
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def register(request):
+    req = RegisterRequest(**request.data)  # валідація
+    tokens = get_auth_service().register(req)  # вся логіка в сервісі
+    return Response(tokens.model_dump(), status=201)  # HTTP відповідь
+```
+
+### Помилки — завжди через global_exception_handler:
+```python
+# Ніколи не повертати Response з помилкою напряму в сервісах
+# Кидати виключення — handler перетворить їх у JSON
+raise DomainException("Post content cannot be empty.")
+raise NotFoundError(f"User '{username}' not found.")
+raise ForbiddenError("You can only edit your own posts.")
+```
+
+### Міграції:
+- НІКОЛИ не використовувати `makemigrations` автоматично
+- Писати міграції вручну для контролю змін
+- Кожна міграція в окремому файлі з описовою назвою
+
+---
+
+## DEPENDENCY INJECTION
+
+Всі залежності збираються в `container.py`:
+
+```python
+def get_auth_service() -> AuthService:
+    return AuthService(
+        user_repo=DjangoUserRepository(),
+        password_encoder=PasswordEncoder(),
+        jwt_provider=get_jwt_provider(),
+        notification_sender=CeleryNotificationSender(),
+    )
+```
+
+- Використовувати `@lru_cache` для singleton об'єктів (JWTProvider)
+- В тестах підміняти через Mock(spec=UserRepository)
+
+---
+
+## TESTING RULES
+
+### Обов'язкова структура:
+```
+tests/
+├── unit/           # Без БД, без Django, тільки моки
+│   ├── test_domain_entities.py
+│   ├── test_services.py
+│   └── test_exception_handler.py
+└── integration/    # З реальною PostgreSQL (testcontainers або pytest-django)
+```
+
+### Unit тести — завжди мокати репозиторії:
+```python
+def setup_method(self):
+    self.users = Mock(spec=UserRepository)  # мок, не реальна БД
+    self.svc = AuthService(self.users, Mock(), Mock(), Mock())
+```
+
+### Іменування тестів:
+```python
+# Формат: test_[що тестуємо]_[умова]_[очікуваний результат]
+def test_register_duplicate_email_raises_conflict(): ...
+def test_like_deleted_post_raises_domain_exception(): ...
+def test_create_post_with_valid_content_succeeds(): ...
+```
+
+### Покриття:
+- Domain layer: мінімум 95%
+- Application layer: мінімум 90%
+- Infrastructure: мінімум 70%
+- Presentation middleware: мінімум 90%
+
+### Заборонено в unit тестах:
+- Звертатись до БД
+- Робити HTTP запити
+- Читати змінні середовища
+- Використовувати `time.sleep()`
+
+---
+
+## API DESIGN
+
+### URL структура:
+```
+POST   /api/v1/auth/register
+POST   /api/v1/auth/login
+GET    /api/v1/posts?page=1&size=20
+POST   /api/v1/posts
+DELETE /api/v1/posts/{id}
+POST   /api/v1/posts/{id}/like
+GET    /api/v1/users/{username}
+POST   /api/v1/users/{username}/follow
+```
+
+### Відповідь на помилку (ЗАВЖДИ такий формат):
+```json
+{
+  "status": 422,
+  "error": "Domain Rule Violation",
+  "message": "Post content cannot be empty.",
+  "timestamp": "2025-06-01T12:00:00+00:00"
+}
+```
+
+### HTTP статус коди:
+- 200 — успішний GET/PATCH
+- 201 — успішний POST (створення)
+- 204 — успішний DELETE (без тіла)
+- 400 — невалідні дані запиту
+- 401 — не авторизований
+- 403 — немає доступу
+- 404 — не знайдено
+- 409 — конфлікт (дублювання)
+- 422 — порушення бізнес-правила
+
+---
+
+## FRONTEND RULES
+
+### Django Templates:
+- Завжди `{% csrf_token %}` в POST формах
+- Бізнес-логіки в templates НЕМАЄ — тільки відображення
+- Partial templates в `templates/partials/` для reusable компонентів
+
+### JavaScript:
+- Vanilla JS тільки (без React/Vue/jQuery)
+- Один файл = одна відповідальність
+- Всі API виклики через `apiCall()` з `utils.js`
+- Optimistic UI для лайків (миттєве оновлення + rollback при помилці)
+
+### CSS теми (обов'язково підтримувати обидві):
+```css
+:root { --bg: #0d0d0f; --text: #f5f4f0; }           /* темна */
+[data-theme="light"] { --bg: #f2f1f7; --text: #1a1a2e; }  /* світла */
+```
+
+### Завжди використовувати CSS змінні — ніяких хардкод кольорів:
+```css
+/* ПРАВИЛЬНО */
+color: var(--text);
+background: var(--bg-card);
+
+/* НЕПРАВИЛЬНО */
+color: #f5f4f0;
+background: #1a1a1f;
+```
+
+---
+
+## SECURITY RULES
+
+- Паролі НІКОЛИ не логувати
+- JWT secret тільки з environment variables
+- Всі sensitive дані через `.env` (не в коді)
+- Avatar зберігати як base64 в БД (не на файловій системі)
+- Перевіряти ownership перед edit/delete: `if post.author_id != user_id: raise ForbiddenError`
+- CSRF токен обов'язковий для всіх форм
+
+---
+
+## ASYNC / CELERY
+
+Для важких або фонових задач — Celery:
+```python
+# Реєстрація не чекає email — кидає задачу в чергу
+@celery_app.task(bind=True, max_retries=3)
+def send_welcome_email(self, user_id, username, email):
+    ...
+
+# Виклик — .delay() щоб не блокувати основний потік
+tasks.send_welcome_email.delay(str(user.id), str(user.username), str(user.email))
+```
+
+---
+
+## FILE NAMING CONVENTIONS
+
+```
+src/domain/entities/user.py          # snake_case файли
+src/domain/entities/post.py
+src/application/services/auth_service.py
+src/infrastructure/database/repositories.py
+templates/partials/post_card.html    # snake_case templates
+static/css/base.css
+static/js/utils.js
+tests/unit/test_domain_entities.py   # test_ префікс
+```
+
+---
+
+## WHAT TO AVOID
+
+- `print()` для дебагу → використовувати `logging`
+- Магічні числа в коді → константи з іменами
+- Коментарі типу `# get user` → код має бути самодокументованим
+- `except Exception: pass` → завжди обробляти або логувати
+- Прямий `import jwt` в файлах де є конфлікт → `importlib.import_module("jwt")`
+- `UserORM.objects.all()` без фільтрів у production views
+- Зберігати секрети в коді
+
+---
+
+## WHEN ADDING NEW FEATURES
+
+1. Починай з **domain** — додай entity/VO/exception якщо потрібно
+2. Додай **port** (абстрактний метод в репозиторій) якщо потрібно
+3. Додай **use case** в application service
+4. Додай **DTO** для вводу/виводу
+5. Реалізуй **repository** в infrastructure
+6. Додай **route** в urls.py і **controller** в presentation
+7. Напиши **тести** для domain і application шарів
+8. Додай **template** або **API endpoint** для фронтенду
