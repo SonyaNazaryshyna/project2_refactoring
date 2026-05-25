@@ -36,7 +36,6 @@ def send_welcome_email(self, user_id: str, username: str, email: str):
         """
         )
         msg["Subject"] = "👋 Welcome to Microblog!"
-        msg["Subject"] = "Welcome to Microblog!"
         msg["From"] = EMAIL_USER
         msg["To"] = email
 
