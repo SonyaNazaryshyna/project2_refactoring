@@ -59,6 +59,8 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-microblog_pass}
       - REDIS_URL=redis://redis:6379/0
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-change-me-in-production}
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
     depends_on:
       postgres:
         condition: service_healthy

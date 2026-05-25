@@ -19,3 +19,4 @@ flake8==7.0.0
 mypy==1.10.0
 requests==2.31.0
 whitenoise==6.6.0
+python-dotenv
